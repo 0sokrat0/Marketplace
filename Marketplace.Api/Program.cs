@@ -11,7 +11,9 @@ var app = builder.Build();
 
 using (var scope = app.Services.CreateScope())
 {
-    scope.ServiceProvider.GetRequiredService<MarketplaceDbContext>().Database.EnsureCreated();
+    var db = scope.ServiceProvider.GetRequiredService<MarketplaceDbContext>();
+    db.Database.EnsureCreated();
+    DbSeeder.Seed(db);
 }
 
 app.MapControllers();
