@@ -2,6 +2,8 @@ using System.Globalization;
 using System.Windows;
 using System.Windows.Markup;
 using Marketplace.Client.Services;
+using Marketplace.Client.ViewModels;
+using Marketplace.Client.Views;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Marketplace.Client;
@@ -25,6 +27,9 @@ public partial class App : Application
         var services = new ServiceCollection();
         services.AddSingleton(new ApiClient(baseAddress));
         services.AddSingleton<SessionService>();
+        services.AddSingleton<IDialogService, DialogService>();
+        services.AddTransient<LoginViewModel>();
+        services.AddTransient<LoginWindow>();
         services.AddTransient<MainWindow>();
         _services = services.BuildServiceProvider();
 
