@@ -1,5 +1,6 @@
 using System.Text;
 using Marketplace.Api.Infrastructure;
+using Marketplace.Api.Services.Auth;
 using Marketplace.Api.Services.Security;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
@@ -15,6 +16,7 @@ builder.Services.AddDbContext<MarketplaceDbContext>(options =>
 builder.Services.AddSingleton(jwt);
 builder.Services.AddSingleton<IPasswordHasher, Pbkdf2PasswordHasher>();
 builder.Services.AddSingleton<IJwtService, JwtService>();
+builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services
     .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options => options.TokenValidationParameters = new TokenValidationParameters
@@ -36,9 +38,10 @@ using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<MarketplaceDbContext>();
     db.Database.EnsureCreated();
-    DbSeeder.Seed(db);
+    DbSeeder.Seed(db, scope.ServiceProvider.GetRequiredService<IPasswordHasher>());
 }
 
+app.UseMiddleware<ErrorHandlingMiddleware>();
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
