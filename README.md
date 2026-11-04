@@ -15,3 +15,18 @@
 ## Работа в команде
 
 Каждая часть делается в своей ветке `feature/*` и вливается в `main` через merge.
+
+## Запуск API
+
+```bash
+dotnet run --project Marketplace.Api
+```
+
+API слушает адрес из `launchSettings.json`. База `marketplace.db` создается и заполняется при первом запуске.
+
+Тестовые учетные записи:
+
+| Логин | Пароль | Роль |
+|---|---|---|
+| admin | admin123 | Admin |
+| user | user123 | User |

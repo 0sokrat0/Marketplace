@@ -1,16 +1,33 @@
 using Marketplace.Api.Entities;
+using Marketplace.Api.Services.Security;
 using Marketplace.Contracts;
 
 namespace Marketplace.Api.Infrastructure;
 
 public static class DbSeeder
 {
-    public static void Seed(MarketplaceDbContext db)
+    public static void Seed(MarketplaceDbContext db, IPasswordHasher hasher)
     {
         SeedReferenceData(db);
+        db.SaveChanges();
+        SeedUsers(db, hasher);
         SeedCatalog(db);
         SeedPickupPoints(db);
         db.SaveChanges();
+    }
+
+    private static void SeedUsers(MarketplaceDbContext db, IPasswordHasher hasher)
+    {
+        if (db.Users.Any())
+        {
+            return;
+        }
+
+        var admin = db.Roles.Single(r => r.Name == Roles.Admin);
+        var user = db.Roles.Single(r => r.Name == Roles.User);
+        db.Users.AddRange(
+            new User { Login = "admin", PasswordHash = hasher.Hash("admin123"), Role = admin },
+            new User { Login = "user", PasswordHash = hasher.Hash("user123"), Role = user });
     }
 
     private static void SeedReferenceData(MarketplaceDbContext db)
