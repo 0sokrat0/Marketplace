@@ -1,4 +1,6 @@
+using System.Globalization;
 using System.Windows;
+using System.Windows.Markup;
 using Marketplace.Client.Services;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -11,6 +13,13 @@ public partial class App : Application
     protected override void OnStartup(StartupEventArgs e)
     {
         base.OnStartup(e);
+
+        var culture = new CultureInfo("ru-RU");
+        CultureInfo.DefaultThreadCurrentCulture = culture;
+        CultureInfo.DefaultThreadCurrentUICulture = culture;
+        FrameworkElement.LanguageProperty.OverrideMetadata(
+            typeof(FrameworkElement),
+            new FrameworkPropertyMetadata(XmlLanguage.GetLanguage(culture.IetfLanguageTag)));
 
         var baseAddress = Environment.GetEnvironmentVariable("MARKETPLACE_API") ?? "http://localhost:5081/";
         var services = new ServiceCollection();
