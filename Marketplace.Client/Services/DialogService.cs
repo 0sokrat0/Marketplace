@@ -10,6 +10,8 @@ public class DialogService(IServiceProvider services) : IDialogService
 
     public bool? ShowLogin() => ShowDialog<LoginWindow>();
 
+    public bool? ShowRegistration() => ShowDialog<RegistrationWindow>();
+
     public void ShowInfo(string message) =>
         MessageBox.Show(message, Caption, MessageBoxButton.OK, MessageBoxImage.Information);
 

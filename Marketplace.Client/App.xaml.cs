@@ -30,6 +30,8 @@ public partial class App : Application
         services.AddSingleton<IDialogService, DialogService>();
         services.AddTransient<LoginViewModel>();
         services.AddTransient<LoginWindow>();
+        services.AddTransient<RegistrationViewModel>();
+        services.AddTransient<RegistrationWindow>();
         services.AddTransient<MainWindow>();
         _services = services.BuildServiceProvider();
 
