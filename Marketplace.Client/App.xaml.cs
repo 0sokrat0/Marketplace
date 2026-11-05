@@ -32,6 +32,8 @@ public partial class App : Application
         services.AddTransient<LoginWindow>();
         services.AddTransient<RegistrationViewModel>();
         services.AddTransient<RegistrationWindow>();
+        services.AddTransient<MainViewModel>();
+        services.AddTransient<WelcomeViewModel>();
         services.AddTransient<MainWindow>();
         _services = services.BuildServiceProvider();
 

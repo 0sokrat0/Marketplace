@@ -14,6 +14,8 @@ public abstract partial class ViewModelBase : ObservableObject
 
     public bool HasError => !string.IsNullOrEmpty(ErrorMessage);
 
+    public virtual Task LoadAsync() => Task.CompletedTask;
+
     protected async Task RunAsync(Func<Task> action)
     {
         ErrorMessage = null;

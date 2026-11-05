@@ -3,6 +3,7 @@
                     xmlns:conv="clr-namespace:Marketplace.Client.Converters">
 
     <BooleanToVisibilityConverter x:Key="BoolToVisibility" />
+    <conv:InverseBooleanToVisibilityConverter x:Key="InverseBoolToVisibility" />
     <conv:InverseBooleanConverter x:Key="InverseBool" />
     <conv:NullToVisibilityConverter x:Key="NullToVisibility" />
     <conv:RatingConverter x:Key="Rating" />
