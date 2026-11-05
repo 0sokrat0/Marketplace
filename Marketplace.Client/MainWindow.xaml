@@ -1,0 +1,33 @@
+<Window x:Class="Marketplace.Client.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Маркетплейс" Width="1180" Height="740" MinWidth="900" MinHeight="560"
+        Background="{StaticResource SurfaceBrush}">
+    <DockPanel>
+        <Border DockPanel.Dock="Top" Background="{StaticResource PrimaryBrush}" Padding="16,10">
+            <DockPanel>
+                <TextBlock Text="Маркетплейс" Foreground="White" FontSize="20" FontWeight="SemiBold" />
+                <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" HorizontalAlignment="Right">
+                    <TextBlock Text="{Binding Session.DisplayName}" Foreground="White" Margin="0,0,12,0" />
+                    <StackPanel Orientation="Horizontal"
+                                Visibility="{Binding Session.IsAuthenticated, Converter={StaticResource BoolToVisibility}}">
+                        <Button Content="Выйти" Command="{Binding LogoutCommand}" />
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal"
+                                Visibility="{Binding Session.IsAuthenticated, Converter={StaticResource InverseBoolToVisibility}}">
+                        <Button Content="Войти" Command="{Binding LoginCommand}" />
+                        <Button Content="Регистрация" Command="{Binding RegisterCommand}" />
+                    </StackPanel>
+                </StackPanel>
+            </DockPanel>
+        </Border>
+
+        <Border DockPanel.Dock="Left" Width="190" Background="White" BorderBrush="{StaticResource BorderBrushLight}"
+                BorderThickness="0,0,1,0">
+            <ListBox ItemsSource="{Binding Items}" SelectedItem="{Binding SelectedItem}" BorderThickness="0"
+                     DisplayMemberPath="Title" Padding="6" FontSize="14" />
+        </Border>
+
+        <ContentControl Content="{Binding CurrentPage}" Margin="20" />
+    </DockPanel>
+</Window>
