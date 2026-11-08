@@ -4,6 +4,7 @@ using Marketplace.Api.Services.Auth;
 using Marketplace.Api.Services.Cart;
 using Marketplace.Api.Services.Catalog;
 using Marketplace.Api.Services.Favorites;
+using Marketplace.Api.Services.Orders;
 using Marketplace.Api.Services.Reviews;
 using Marketplace.Api.Services.Security;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -25,6 +26,7 @@ builder.Services.AddScoped<ICatalogService, CatalogService>();
 builder.Services.AddScoped<IReviewService, ReviewService>();
 builder.Services.AddScoped<ICartService, CartService>();
 builder.Services.AddScoped<IFavoriteService, FavoriteService>();
+builder.Services.AddScoped<IOrderService, OrderService>();
 builder.Services
     .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options => options.TokenValidationParameters = new TokenValidationParameters
