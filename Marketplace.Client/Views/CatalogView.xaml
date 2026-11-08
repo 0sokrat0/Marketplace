@@ -95,7 +95,10 @@
                                         </Style>
                                     </TextBlock.Style>
                                 </TextBlock>
-                                <StackPanel Orientation="Horizontal" Margin="0,8,0,0"
+                                <Button Content="Подробнее" CommandParameter="{Binding}" HorizontalAlignment="Left"
+                                        Margin="0,8,0,0"
+                                        Command="{Binding DataContext.OpenProductCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" />
+                                <StackPanel Orientation="Horizontal" Margin="0,0,0,0"
                                             Visibility="{Binding DataContext.ShowShopButtons, RelativeSource={RelativeSource AncestorType=UserControl}, Converter={StaticResource BoolToVisibility}}">
                                     <Button Content="В корзину" Style="{StaticResource PrimaryButton}"
                                             IsEnabled="{Binding CanBuy}" CommandParameter="{Binding}"

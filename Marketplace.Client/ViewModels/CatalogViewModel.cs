@@ -82,6 +82,13 @@ public partial class CatalogViewModel : ViewModelBase
     }
 
     [RelayCommand]
+    private Task OpenProductAsync(ProductDto product)
+    {
+        _dialogs.ShowProduct(product);
+        return SearchAsync();
+    }
+
+    [RelayCommand]
     private Task AddToCartAsync(ProductDto product) => RunAsync(async () =>
     {
         if (!EnsureSignedIn())
