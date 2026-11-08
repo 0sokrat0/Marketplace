@@ -26,7 +26,8 @@ public partial class MainViewModel : ViewModelBase
 
         _allItems =
         [
-            new NavigationItem("Главная", typeof(WelcomeViewModel), Access.Guest)
+            new NavigationItem("Каталог", typeof(CatalogViewModel), Access.Guest),
+            new NavigationItem("О магазине", typeof(WelcomeViewModel), Access.Guest)
         ];
 
         session.PropertyChanged += (_, _) => RefreshItems();

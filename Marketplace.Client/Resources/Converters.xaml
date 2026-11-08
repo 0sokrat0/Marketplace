@@ -8,5 +8,6 @@
     <conv:NullToVisibilityConverter x:Key="NullToVisibility" />
     <conv:RatingConverter x:Key="Rating" />
     <conv:ImageNameConverter x:Key="ImageName" />
+    <conv:EmptyListToVisibilityConverter x:Key="EmptyListToVisibility" />
 
 </ResourceDictionary>
