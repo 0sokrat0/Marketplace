@@ -27,6 +27,7 @@ public partial class MainViewModel : ViewModelBase
         _allItems =
         [
             new NavigationItem("Каталог", typeof(CatalogViewModel), Access.Guest),
+            new NavigationItem("Корзина", typeof(CartViewModel), Access.User),
             new NavigationItem("О магазине", typeof(WelcomeViewModel), Access.Guest)
         ];
 
