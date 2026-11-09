@@ -1,0 +1,54 @@
+<UserControl x:Class="Marketplace.Client.Views.FavoritesView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <DockPanel>
+        <TextBlock DockPanel.Dock="Top" Text="Избранное" Style="{StaticResource HeaderText}" />
+
+        <StackPanel DockPanel.Dock="Bottom">
+            <TextBlock Text="{Binding ErrorMessage}" Style="{StaticResource ErrorText}" Margin="6,4"
+                       Visibility="{Binding HasError, Converter={StaticResource BoolToVisibility}}" />
+            <TextBlock Text="{Binding StatusMessage}" Style="{StaticResource MutedText}" Margin="6,4"
+                       Visibility="{Binding StatusMessage, Converter={StaticResource NullToVisibility}}" />
+        </StackPanel>
+
+        <TextBlock Text="В избранном пока ничего нет" Style="{StaticResource MutedText}" HorizontalAlignment="Center"
+                   Margin="0,40,0,0" DockPanel.Dock="Top"
+                   Visibility="{Binding IsEmpty, Converter={StaticResource BoolToVisibility}}" />
+
+        <ScrollViewer VerticalScrollBarVisibility="Auto">
+            <ItemsControl ItemsSource="{Binding Items}">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <Border Style="{StaticResource Card}">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="72" />
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="120" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <Image Source="{Binding ImageFileName, Converter={StaticResource ImageName}}"
+                                       Width="60" Height="60" Stretch="Uniform" />
+                                <StackPanel Grid.Column="1" Margin="10,0">
+                                    <TextBlock Text="{Binding Name}" FontWeight="SemiBold" TextWrapping="Wrap" />
+                                    <TextBlock Text="{Binding CategoryName}" Style="{StaticResource MutedText}" FontSize="12" />
+                                    <TextBlock Text="{Binding AverageRating, Converter={StaticResource Rating}}"
+                                               Style="{StaticResource MutedText}" />
+                                </StackPanel>
+                                <TextBlock Grid.Column="2" Text="{Binding Price, StringFormat={}{0:N2} ₽}"
+                                           FontWeight="Bold" TextAlignment="Right" />
+                                <StackPanel Grid.Column="3" Orientation="Horizontal">
+                                    <Button Content="В корзину" Style="{StaticResource PrimaryButton}"
+                                            IsEnabled="{Binding CanBuy}" CommandParameter="{Binding}"
+                                            Command="{Binding DataContext.MoveToCartCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" />
+                                    <Button Content="Убрать" CommandParameter="{Binding}"
+                                            Command="{Binding DataContext.RemoveCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" />
+                                </StackPanel>
+                            </Grid>
+                        </Border>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </ScrollViewer>
+    </DockPanel>
+</UserControl>

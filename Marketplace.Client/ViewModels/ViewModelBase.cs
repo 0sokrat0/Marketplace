@@ -10,6 +10,9 @@ public abstract partial class ViewModelBase : ObservableObject
     private string? _errorMessage;
 
     [ObservableProperty]
+    private string? _statusMessage;
+
+    [ObservableProperty]
     private bool _isBusy;
 
     public bool HasError => !string.IsNullOrEmpty(ErrorMessage);
@@ -19,6 +22,7 @@ public abstract partial class ViewModelBase : ObservableObject
     protected async Task RunAsync(Func<Task> action)
     {
         ErrorMessage = null;
+        StatusMessage = null;
         IsBusy = true;
         try
         {

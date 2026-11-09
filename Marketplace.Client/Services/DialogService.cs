@@ -1,5 +1,7 @@
 using System.Windows;
+using Marketplace.Client.ViewModels;
 using Marketplace.Client.Views;
+using Marketplace.Contracts;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Marketplace.Client.Services;
@@ -11,6 +13,14 @@ public class DialogService(IServiceProvider services) : IDialogService
     public bool? ShowLogin() => ShowDialog<LoginWindow>();
 
     public bool? ShowRegistration() => ShowDialog<RegistrationWindow>();
+
+    public void ShowProduct(ProductDto product)
+    {
+        var viewModel = ActivatorUtilities.CreateInstance<ProductDetailsViewModel>(services, product);
+        var window = new ProductDetailsWindow(viewModel);
+        AttachOwner(window);
+        window.ShowDialog();
+    }
 
     public void ShowInfo(string message) =>
         MessageBox.Show(message, Caption, MessageBoxButton.OK, MessageBoxImage.Information);
@@ -24,12 +34,16 @@ public class DialogService(IServiceProvider services) : IDialogService
     private bool? ShowDialog<TWindow>() where TWindow : Window
     {
         var window = services.GetRequiredService<TWindow>();
+        AttachOwner(window);
+        return window.ShowDialog();
+    }
+
+    private static void AttachOwner(Window window)
+    {
         var owner = Application.Current.MainWindow;
         if (owner is { IsLoaded: true } && !ReferenceEquals(owner, window))
         {
             window.Owner = owner;
         }
-
-        return window.ShowDialog();
     }
 }

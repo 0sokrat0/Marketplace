@@ -1,0 +1,116 @@
+<UserControl x:Class="Marketplace.Client.Views.CatalogView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <DockPanel>
+        <TextBlock DockPanel.Dock="Top" Text="Каталог" Style="{StaticResource HeaderText}" />
+
+        <Border DockPanel.Dock="Top" Style="{StaticResource Card}" Margin="0,0,0,8">
+            <WrapPanel>
+                <StackPanel Width="260" Margin="0,0,12,0">
+                    <TextBlock Text="Поиск по названию" Style="{StaticResource MutedText}" />
+                    <TextBox Text="{Binding Search, UpdateSourceTrigger=PropertyChanged}">
+                        <TextBox.InputBindings>
+                            <KeyBinding Key="Enter" Command="{Binding SearchCommand}" />
+                        </TextBox.InputBindings>
+                    </TextBox>
+                </StackPanel>
+                <StackPanel Width="200" Margin="0,0,12,0">
+                    <TextBlock Text="Категория" Style="{StaticResource MutedText}" />
+                    <ComboBox ItemsSource="{Binding Categories}" SelectedItem="{Binding SelectedCategory}"
+                              DisplayMemberPath="Name" />
+                </StackPanel>
+                <StackPanel Width="100" Margin="0,0,12,0">
+                    <TextBlock Text="Цена от" Style="{StaticResource MutedText}" />
+                    <TextBox Text="{Binding MinPriceText, UpdateSourceTrigger=PropertyChanged}">
+                        <TextBox.InputBindings>
+                            <KeyBinding Key="Enter" Command="{Binding SearchCommand}" />
+                        </TextBox.InputBindings>
+                    </TextBox>
+                </StackPanel>
+                <StackPanel Width="100" Margin="0,0,12,0">
+                    <TextBlock Text="Цена до" Style="{StaticResource MutedText}" />
+                    <TextBox Text="{Binding MaxPriceText, UpdateSourceTrigger=PropertyChanged}">
+                        <TextBox.InputBindings>
+                            <KeyBinding Key="Enter" Command="{Binding SearchCommand}" />
+                        </TextBox.InputBindings>
+                    </TextBox>
+                </StackPanel>
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Bottom">
+                    <Button Content="Найти" Style="{StaticResource PrimaryButton}" Command="{Binding SearchCommand}" />
+                    <Button Content="Сбросить" Command="{Binding ResetCommand}" />
+                </StackPanel>
+            </WrapPanel>
+        </Border>
+
+        <StackPanel DockPanel.Dock="Bottom">
+            <TextBlock Text="{Binding ErrorMessage}" Style="{StaticResource ErrorText}" Margin="6,4"
+                       Visibility="{Binding HasError, Converter={StaticResource BoolToVisibility}}" />
+            <TextBlock Text="{Binding StatusMessage}" Style="{StaticResource MutedText}" Margin="6,4"
+                       Visibility="{Binding StatusMessage, Converter={StaticResource NullToVisibility}}" />
+        </StackPanel>
+
+        <TextBlock Text="Ничего не найдено" Style="{StaticResource MutedText}" HorizontalAlignment="Center"
+                   Margin="0,40,0,0" DockPanel.Dock="Top">
+            <TextBlock.Visibility>
+                <MultiBinding Converter="{StaticResource EmptyListToVisibility}">
+                    <Binding Path="Products.Count" />
+                    <Binding Path="IsBusy" />
+                </MultiBinding>
+            </TextBlock.Visibility>
+        </TextBlock>
+
+        <ScrollViewer VerticalScrollBarVisibility="Auto">
+            <ItemsControl ItemsSource="{Binding Products}">
+                <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <WrapPanel />
+                    </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <Border Style="{StaticResource Card}" Width="232">
+                            <StackPanel>
+                                <Image Source="{Binding ImageFileName, Converter={StaticResource ImageName}}"
+                                       Height="120" Stretch="Uniform" />
+                                <TextBlock Text="{Binding Name}" FontWeight="SemiBold" TextWrapping="Wrap"
+                                           Margin="0,8,0,0" MinHeight="38" />
+                                <TextBlock Text="{Binding CategoryName}" Style="{StaticResource MutedText}" FontSize="12" />
+                                <TextBlock Text="{Binding Price, StringFormat={}{0:N2} ₽}" FontSize="18"
+                                           FontWeight="Bold" Margin="0,6,0,0" />
+                                <TextBlock Text="{Binding PackSize, StringFormat=В упаковке: {0} шт.}"
+                                           Style="{StaticResource MutedText}" FontSize="12"
+                                           Visibility="{Binding PackSize, Converter={StaticResource NullToVisibility}}" />
+                                <TextBlock Text="{Binding AverageRating, Converter={StaticResource Rating}}"
+                                           Style="{StaticResource MutedText}" />
+                                <TextBlock Text="Недоступно для покупки" Foreground="{StaticResource DangerBrush}"
+                                           FontSize="12">
+                                    <TextBlock.Style>
+                                        <Style TargetType="TextBlock" BasedOn="{StaticResource {x:Type TextBlock}}">
+                                            <Setter Property="Visibility" Value="Collapsed" />
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding CanBuy}" Value="False">
+                                                    <Setter Property="Visibility" Value="Visible" />
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBlock.Style>
+                                </TextBlock>
+                                <Button Content="Подробнее" CommandParameter="{Binding}" HorizontalAlignment="Left"
+                                        Margin="0,8,0,0"
+                                        Command="{Binding DataContext.OpenProductCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" />
+                                <StackPanel Orientation="Horizontal" Margin="0,0,0,0"
+                                            Visibility="{Binding DataContext.ShowShopButtons, RelativeSource={RelativeSource AncestorType=UserControl}, Converter={StaticResource BoolToVisibility}}">
+                                    <Button Content="В корзину" Style="{StaticResource PrimaryButton}"
+                                            IsEnabled="{Binding CanBuy}" CommandParameter="{Binding}"
+                                            Command="{Binding DataContext.AddToCartCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" />
+                                    <Button Content="♡" ToolTip="В избранное" CommandParameter="{Binding}"
+                                            Command="{Binding DataContext.AddToFavoritesCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" />
+                                </StackPanel>
+                            </StackPanel>
+                        </Border>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </ScrollViewer>
+    </DockPanel>
+</UserControl>
