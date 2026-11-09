@@ -6,5 +6,7 @@ public interface IOrderService
 {
     Task<OrderDto> CreateAsync(int userId, CreateOrderRequest request);
 
+    Task<List<OrderSummaryDto>> ListForUserAsync(int userId, bool newestFirst);
+
     Task<OrderDto> GetForUserAsync(int userId, int orderId);
 }

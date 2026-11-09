@@ -23,6 +23,15 @@ public static class OrderMapper
             items);
     }
 
+    public static OrderSummaryDto ToSummary(Order order) => new(
+        order.Id,
+        order.CreatedAt,
+        order.Status.Name,
+        order.DeliveryMethod.Name,
+        Destination(order),
+        order.Items.Sum(i => i.UnitPrice * i.Quantity),
+        order.User.Login);
+
     private static string Destination(Order order) =>
         order.PickupPoint is { } point ? $"{point.Name}, {point.Address}" : order.DeliveryAddress ?? string.Empty;
 }

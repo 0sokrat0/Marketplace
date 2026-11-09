@@ -88,6 +88,17 @@ public class OrderService(MarketplaceDbContext db) : IOrderService
         return await GetForUserAsync(userId, order.Id);
     }
 
+    public async Task<List<OrderSummaryDto>> ListForUserAsync(int userId, bool newestFirst)
+    {
+        var query = WithDetails(db.Orders.AsNoTracking()).Where(o => o.UserId == userId);
+        query = newestFirst
+            ? query.OrderByDescending(o => o.CreatedAt).ThenByDescending(o => o.Id)
+            : query.OrderBy(o => o.CreatedAt).ThenBy(o => o.Id);
+
+        var orders = await query.ToListAsync();
+        return orders.Select(OrderMapper.ToSummary).ToList();
+    }
+
     public async Task<OrderDto> GetForUserAsync(int userId, int orderId)
     {
         var order = await WithDetails(db.Orders.AsNoTracking())
