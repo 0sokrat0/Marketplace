@@ -10,6 +10,8 @@ public interface IDialogService
 
     void ShowProduct(ProductDto product);
 
+    OrderDto? ShowCheckout(CheckoutRequest request);
+
     void ShowInfo(string message);
 
     void ShowError(string message);

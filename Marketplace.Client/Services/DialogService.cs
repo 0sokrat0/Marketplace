@@ -22,6 +22,14 @@ public class DialogService(IServiceProvider services) : IDialogService
         window.ShowDialog();
     }
 
+    public OrderDto? ShowCheckout(CheckoutRequest request)
+    {
+        var viewModel = ActivatorUtilities.CreateInstance<CheckoutViewModel>(services, request);
+        var window = new CheckoutWindow(viewModel);
+        AttachOwner(window);
+        return window.ShowDialog() == true ? viewModel.CreatedOrder : null;
+    }
+
     public void ShowInfo(string message) =>
         MessageBox.Show(message, Caption, MessageBoxButton.OK, MessageBoxImage.Information);
 

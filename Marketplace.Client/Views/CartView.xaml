@@ -4,12 +4,18 @@
     <DockPanel>
         <TextBlock DockPanel.Dock="Top" Text="Корзина" Style="{StaticResource HeaderText}" />
 
-        <TextBlock DockPanel.Dock="Bottom" Text="{Binding ErrorMessage}" Style="{StaticResource ErrorText}" Margin="6,4"
-                   Visibility="{Binding HasError, Converter={StaticResource BoolToVisibility}}" />
+        <StackPanel DockPanel.Dock="Bottom">
+            <TextBlock Text="{Binding ErrorMessage}" Style="{StaticResource ErrorText}" Margin="6,4"
+                       Visibility="{Binding HasError, Converter={StaticResource BoolToVisibility}}" />
+            <TextBlock Text="{Binding StatusMessage}" Style="{StaticResource MutedText}" Margin="6,4"
+                       Visibility="{Binding StatusMessage, Converter={StaticResource NullToVisibility}}" />
+        </StackPanel>
 
         <Border DockPanel.Dock="Bottom" Style="{StaticResource Card}"
                 Visibility="{Binding HasItems, Converter={StaticResource BoolToVisibility}}">
             <DockPanel>
+                <Button DockPanel.Dock="Right" Content="Оформить заказ" Style="{StaticResource PrimaryButton}"
+                        Command="{Binding CheckoutCommand}" />
                 <TextBlock Text="{Binding Total, StringFormat=Итого: {0:N2} ₽}" FontSize="20" FontWeight="Bold" />
             </DockPanel>
         </Border>

@@ -101,6 +101,22 @@ public partial class CatalogViewModel : ViewModelBase
     });
 
     [RelayCommand]
+    private Task BuyNowAsync(ProductDto product) => RunAsync(async () =>
+    {
+        if (!EnsureSignedIn())
+        {
+            return;
+        }
+
+        var request = new CheckoutRequest(product.Price, $"Товар: {product.Name}", new OrderItemRequest(product.Id, 1));
+        if (_dialogs.ShowCheckout(request) is { } order)
+        {
+            StatusMessage = $"Заказ №{order.Id} оформлен";
+            await LoadProductsAsync();
+        }
+    });
+
+    [RelayCommand]
     private Task AddToFavoritesAsync(ProductDto product) => RunAsync(async () =>
     {
         if (!EnsureSignedIn())

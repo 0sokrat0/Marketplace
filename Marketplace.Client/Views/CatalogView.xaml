@@ -103,6 +103,8 @@
                                     <Button Content="В корзину" Style="{StaticResource PrimaryButton}"
                                             IsEnabled="{Binding CanBuy}" CommandParameter="{Binding}"
                                             Command="{Binding DataContext.AddToCartCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" />
+                                    <Button Content="Купить" IsEnabled="{Binding CanBuy}" CommandParameter="{Binding}"
+                                            Command="{Binding DataContext.BuyNowCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" />
                                     <Button Content="♡" ToolTip="В избранное" CommandParameter="{Binding}"
                                             Command="{Binding DataContext.AddToFavoritesCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" />
                                 </StackPanel>
