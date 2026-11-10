@@ -107,6 +107,49 @@ public class OrderService(MarketplaceDbContext db) : IOrderService
         return OrderMapper.ToDto(order);
     }
 
+    public async Task<List<OrderSummaryDto>> ListAllAsync()
+    {
+        var orders = await WithDetails(db.Orders.AsNoTracking())
+            .OrderByDescending(o => o.CreatedAt)
+            .ThenByDescending(o => o.Id)
+            .ToListAsync();
+        return orders.Select(OrderMapper.ToSummary).ToList();
+    }
+
+    public async Task<OrderDto> GetAnyAsync(int orderId)
+    {
+        var order = await WithDetails(db.Orders.AsNoTracking()).FirstOrDefaultAsync(o => o.Id == orderId)
+            ?? throw AppException.NotFound("Заказ не найден");
+        return OrderMapper.ToDto(order);
+    }
+
+    public async Task<OrderDto> SetStatusAsync(int orderId, string status)
+    {
+        if (!OrderStatuses.All.Contains(status))
+        {
+            throw AppException.BadRequest("Неизвестный статус заказа");
+        }
+
+        var order = await WithDetails(db.Orders).FirstOrDefaultAsync(o => o.Id == orderId)
+            ?? throw AppException.NotFound("Заказ не найден");
+        if (order.Status.Name == OrderStatuses.Cancelled)
+        {
+            throw AppException.BadRequest("Статус отмененного заказа изменить нельзя");
+        }
+
+        if (status == OrderStatuses.Cancelled)
+        {
+            foreach (var item in order.Items)
+            {
+                item.Product.Stock += item.Quantity;
+            }
+        }
+
+        order.StatusId = await db.OrderStatuses.Where(s => s.Name == status).Select(s => s.Id).SingleAsync();
+        await db.SaveChangesAsync();
+        return await GetAnyAsync(orderId);
+    }
+
     private async Task<List<(Product Product, int Quantity)>> LinesFromCart(int userId)
     {
         var items = await db.CartItems
