@@ -37,6 +37,7 @@ public partial class App : Application
         services.AddTransient<CatalogViewModel>();
         services.AddTransient<CartViewModel>();
         services.AddTransient<FavoritesViewModel>();
+        services.AddTransient<OrdersViewModel>();
         services.AddTransient<MainWindow>();
         _services = services.BuildServiceProvider();
 

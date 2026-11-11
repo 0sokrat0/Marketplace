@@ -15,6 +15,10 @@
         <views:FavoritesView />
     </DataTemplate>
 
+    <DataTemplate DataType="{x:Type vm:OrdersViewModel}">
+        <views:OrdersView />
+    </DataTemplate>
+
     <DataTemplate DataType="{x:Type vm:WelcomeViewModel}">
         <views:WelcomeView />
     </DataTemplate>
