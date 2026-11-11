@@ -21,9 +21,9 @@ public record ProductDto(
 
 public record ProductRequest(
     string Name,
-    string Description,
+    string? Description,
     decimal Price,
-    string ImageFileName,
+    string? ImageFileName,
     int CategoryId,
     int Stock,
     int? PackSize,
@@ -33,4 +33,4 @@ public record ProductFilter(string? Search, int? CategoryId, decimal? MinPrice, 
 
 public record ReviewDto(int Id, int ProductId, string UserLogin, int Rating, string Text, DateTime CreatedAt);
 
-public record ReviewRequest(int Rating, string Text);
+public record ReviewRequest(int Rating, string? Text);

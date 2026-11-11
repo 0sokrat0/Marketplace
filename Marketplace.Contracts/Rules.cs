@@ -30,6 +30,8 @@ public static class OrderStatuses
 public static class OrderRules
 {
     public const decimal DeliveryThreshold = 600m;
+
+    public static bool IsDeliveryAvailable(decimal total) => total >= DeliveryThreshold;
     public const int MinRating = 1;
     public const int MaxRating = 5;
 }
