@@ -19,6 +19,14 @@
         <views:OrdersView />
     </DataTemplate>
 
+    <DataTemplate DataType="{x:Type vm:AdminProductsViewModel}">
+        <views:AdminProductsView />
+    </DataTemplate>
+
+    <DataTemplate DataType="{x:Type vm:AdminCategoriesViewModel}">
+        <views:AdminCategoriesView />
+    </DataTemplate>
+
     <DataTemplate DataType="{x:Type vm:WelcomeViewModel}">
         <views:WelcomeView />
     </DataTemplate>
