@@ -12,6 +12,17 @@
 | `Marketplace.Client` | WPF-приложение |
 | `Marketplace.Api.Tests` | интеграционные тесты API |
 
+## Документация
+
+- [База данных и схема](docs/database.md)
+- [REST API](docs/api.md)
+
+## Тесты
+
+```bash
+dotnet test Marketplace.Api.Tests
+```
+
 ## Работа в команде
 
 Каждая часть делается в своей ветке `feature/*` и вливается в `main` через merge.
