@@ -33,6 +33,7 @@ public partial class MainViewModel : ViewModelBase
             new NavigationItem("Товары (админ)", typeof(AdminProductsViewModel), Access.Admin),
             new NavigationItem("Категории", typeof(AdminCategoriesViewModel), Access.Admin),
             new NavigationItem("Пункты выдачи", typeof(AdminPickupPointsViewModel), Access.Admin),
+            new NavigationItem("Заказы (админ)", typeof(AdminOrdersViewModel), Access.Admin),
             new NavigationItem("О магазине", typeof(WelcomeViewModel), Access.Guest)
         ];
 
