@@ -27,6 +27,10 @@
         <views:AdminCategoriesView />
     </DataTemplate>
 
+    <DataTemplate DataType="{x:Type vm:AdminPickupPointsViewModel}">
+        <views:AdminPickupPointsView />
+    </DataTemplate>
+
     <DataTemplate DataType="{x:Type vm:WelcomeViewModel}">
         <views:WelcomeView />
     </DataTemplate>
