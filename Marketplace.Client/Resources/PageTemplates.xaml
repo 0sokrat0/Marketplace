@@ -35,6 +35,10 @@
         <views:AdminOrdersView />
     </DataTemplate>
 
+    <DataTemplate DataType="{x:Type vm:AdminReviewsViewModel}">
+        <views:AdminReviewsView />
+    </DataTemplate>
+
     <DataTemplate DataType="{x:Type vm:WelcomeViewModel}">
         <views:WelcomeView />
     </DataTemplate>

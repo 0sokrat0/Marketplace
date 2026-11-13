@@ -42,6 +42,7 @@ public partial class App : Application
         services.AddTransient<AdminCategoriesViewModel>();
         services.AddTransient<AdminPickupPointsViewModel>();
         services.AddTransient<AdminOrdersViewModel>();
+        services.AddTransient<AdminReviewsViewModel>();
         services.AddTransient<MainWindow>();
         _services = services.BuildServiceProvider();
 
