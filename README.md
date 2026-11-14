@@ -30,3 +30,22 @@ API слушает адрес из `launchSettings.json`. База `marketplace.
 |---|---|---|
 | admin | admin123 | Admin |
 | user | user123 | User |
+
+## Запуск клиента
+
+WPF-приложение запускается только на Windows. Сначала запустите API, затем:
+
+```bash
+dotnet run --project Marketplace.Client
+```
+
+Адрес API по умолчанию `http://localhost:5081/`, его можно задать переменной окружения `MARKETPLACE_API`.
+
+Устройство клиента:
+
+- паттерн MVVM на `CommunityToolkit.Mvvm`, зависимости собирает `Microsoft.Extensions.DependencyInjection`;
+- `Services/ApiClient.cs` единственное место, где клиент обращается к API, ошибки сервера приходят как `ApiException`;
+- левое меню зависит от роли: гость видит каталог, пользователь корзину, избранное и заказы, администратор разделы
+  управления товарами, категориями, пунктами выдачи, заказами и отзывами;
+- изображения товаров лежат в `Marketplace.Client/Assets/Images`, в базе хранится только имя файла, для неизвестного
+  имени показывается `placeholder.png`.
