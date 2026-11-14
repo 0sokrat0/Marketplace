@@ -15,6 +15,30 @@
         <views:FavoritesView />
     </DataTemplate>
 
+    <DataTemplate DataType="{x:Type vm:OrdersViewModel}">
+        <views:OrdersView />
+    </DataTemplate>
+
+    <DataTemplate DataType="{x:Type vm:AdminProductsViewModel}">
+        <views:AdminProductsView />
+    </DataTemplate>
+
+    <DataTemplate DataType="{x:Type vm:AdminCategoriesViewModel}">
+        <views:AdminCategoriesView />
+    </DataTemplate>
+
+    <DataTemplate DataType="{x:Type vm:AdminPickupPointsViewModel}">
+        <views:AdminPickupPointsView />
+    </DataTemplate>
+
+    <DataTemplate DataType="{x:Type vm:AdminOrdersViewModel}">
+        <views:AdminOrdersView />
+    </DataTemplate>
+
+    <DataTemplate DataType="{x:Type vm:AdminReviewsViewModel}">
+        <views:AdminReviewsView />
+    </DataTemplate>
+
     <DataTemplate DataType="{x:Type vm:WelcomeViewModel}">
         <views:WelcomeView />
     </DataTemplate>

@@ -6,7 +6,7 @@ using Marketplace.Contracts;
 
 namespace Marketplace.Client.ViewModels;
 
-public partial class CartViewModel(ApiClient api) : ViewModelBase
+public partial class CartViewModel(ApiClient api, IDialogService dialogs) : ViewModelBase
 {
     [ObservableProperty]
     private decimal _total;
@@ -36,6 +36,17 @@ public partial class CartViewModel(ApiClient api) : ViewModelBase
     [RelayCommand]
     private Task RemoveAsync(CartItemDto item) =>
         RunAsync(async () => Apply(await api.RemoveFromCart(item.ProductId)));
+
+    [RelayCommand]
+    private Task CheckoutAsync() => RunAsync(async () =>
+    {
+        var request = new CheckoutRequest(Total, $"Товаров в корзине: {Items.Sum(i => i.Quantity)}", null);
+        if (dialogs.ShowCheckout(request) is { } order)
+        {
+            Apply(await api.GetCart());
+            StatusMessage = $"Заказ №{order.Id} оформлен, его можно найти в разделе «Заказы»";
+        }
+    });
 
     private void Apply(CartDto cart)
     {

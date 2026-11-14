@@ -16,4 +16,10 @@
     <ProjectReference Include="..\Marketplace.Contracts\Marketplace.Contracts.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Content Include="Assets\Images\*.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
 </Project>

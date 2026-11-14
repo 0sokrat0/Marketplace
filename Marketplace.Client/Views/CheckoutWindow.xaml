@@ -1,0 +1,42 @@
+<Window x:Class="Marketplace.Client.Views.CheckoutWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Оформление заказа" Width="460" SizeToContent="Height" ResizeMode="NoResize"
+        WindowStartupLocation="CenterOwner" Background="{StaticResource SurfaceBrush}">
+    <StackPanel Margin="24">
+        <TextBlock Text="Оформление заказа" Style="{StaticResource HeaderText}" />
+        <TextBlock Text="{Binding Summary}" TextWrapping="Wrap" FontWeight="SemiBold" />
+        <TextBlock Text="{Binding DeliveryHint}" Style="{StaticResource MutedText}" TextWrapping="Wrap" Margin="0,4,0,12" />
+
+        <RadioButton Content="Доставка по адресу" Margin="0,4"
+                     IsEnabled="{Binding DeliveryAvailable}"
+                     IsChecked="{Binding UseDelivery}" />
+        <TextBox Text="{Binding Address, UpdateSourceTrigger=PropertyChanged}" Margin="22,2,0,8"
+                 Visibility="{Binding UseDelivery, Converter={StaticResource BoolToVisibility}}" />
+
+        <RadioButton Content="Самовывоз из пункта выдачи" Margin="0,4"
+                     IsChecked="{Binding UsePickup, Mode=OneWay}"
+                     Checked="OnPickupChecked" />
+        <ComboBox ItemsSource="{Binding PickupPoints}" SelectedItem="{Binding SelectedPickupPoint}" Margin="22,2,0,8"
+                  Visibility="{Binding UsePickup, Converter={StaticResource BoolToVisibility}}">
+            <ComboBox.ItemTemplate>
+                <DataTemplate>
+                    <TextBlock>
+                        <Run Text="{Binding Name, Mode=OneWay}" FontWeight="SemiBold" />
+                        <Run Text="{Binding Address, StringFormat= ({0}), Mode=OneWay}" />
+                    </TextBlock>
+                </DataTemplate>
+            </ComboBox.ItemTemplate>
+        </ComboBox>
+
+        <TextBlock Text="{Binding ErrorMessage}" Style="{StaticResource ErrorText}" Margin="0,8,0,0"
+                   Visibility="{Binding HasError, Converter={StaticResource BoolToVisibility}}" />
+
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,16,0,0">
+            <Button Content="Отмена" IsCancel="True" />
+            <Button Content="Оформить" IsDefault="True" Style="{StaticResource PrimaryButton}"
+                    Command="{Binding ConfirmCommand}"
+                    IsEnabled="{Binding IsBusy, Converter={StaticResource InverseBool}}" />
+        </StackPanel>
+    </StackPanel>
+</Window>

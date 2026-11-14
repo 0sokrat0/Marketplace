@@ -40,6 +40,7 @@
                             Visibility="{Binding ShowShopButtons, Converter={StaticResource BoolToVisibility}}">
                     <Button Content="В корзину" Style="{StaticResource PrimaryButton}" Margin="0,4,4,4"
                             IsEnabled="{Binding Product.CanBuy}" Command="{Binding AddToCartCommand}" />
+                    <Button Content="Купить сразу" IsEnabled="{Binding Product.CanBuy}" Command="{Binding BuyNowCommand}" />
                     <Button Content="В избранное" Command="{Binding AddToFavoritesCommand}" />
                 </StackPanel>
             </StackPanel>
