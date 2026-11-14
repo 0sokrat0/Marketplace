@@ -10,9 +10,9 @@ using Marketplace.Api.Services.Reviews;
 using Marketplace.Api.Services.Security;
 using Marketplace.Contracts;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -48,8 +48,33 @@ builder.Services.AddControllers().ConfigureApiBehaviorOptions(options =>
     options.InvalidModelStateResponseFactory = context =>
     {
         var fields = string.Join(", ", context.ModelState.Where(e => e.Value?.Errors.Count > 0).Select(e => e.Key));
-        return new BadRequestObjectResult(new ErrorResponse($"Неверные данные запроса: {fields}"));
+        Result invalid = Result.InvalidData($"Неверные данные запроса: {fields}");
+        return invalid.ToActionResult();
     });
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen(options =>
+{
+    options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+    {
+        Name = "Authorization",
+        Type = SecuritySchemeType.Http,
+        Scheme = "bearer",
+        BearerFormat = "JWT",
+        In = ParameterLocation.Header,
+        Description = "Введите JWT-токен"
+    });
+
+    options.AddSecurityRequirement(new OpenApiSecurityRequirement
+    {
+        {
+            new OpenApiSecurityScheme
+            {
+                Reference = new OpenApiReference { Type = ReferenceType.SecurityScheme, Id = "Bearer" }
+            },
+            Array.Empty<string>()
+        }
+    });
+});
 
 var app = builder.Build();
 
@@ -60,7 +85,8 @@ using (var scope = app.Services.CreateScope())
     DbSeeder.Seed(db, scope.ServiceProvider.GetRequiredService<IPasswordHasher>());
 }
 
-app.UseMiddleware<ErrorHandlingMiddleware>();
+app.UseSwagger();
+app.UseSwaggerUI();
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
