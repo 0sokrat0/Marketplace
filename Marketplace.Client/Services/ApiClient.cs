@@ -20,11 +20,11 @@ public class ApiClient
     public void SetToken(string? token) =>
         _http.DefaultRequestHeaders.Authorization = token is null ? null : new AuthenticationHeaderValue("Bearer", token);
 
-    public Task<AuthResponse> Register(RegisterRequest request) => Send<AuthResponse>(HttpMethod.Post, "api/auth/register", request);
+    public Task<AuthResponse> Register(RegisterRequest request) => Send<AuthResponse>(HttpMethod.Post, "api/Auth/Register", request);
 
-    public Task<AuthResponse> Login(LoginRequest request) => Send<AuthResponse>(HttpMethod.Post, "api/auth/login", request);
+    public Task<AuthResponse> Login(LoginRequest request) => Send<AuthResponse>(HttpMethod.Post, "api/Auth/Login", request);
 
-    public Task<List<CategoryDto>> GetCategories() => Send<List<CategoryDto>>(HttpMethod.Get, "api/categories");
+    public Task<List<CategoryDto>> GetCategories() => Send<List<CategoryDto>>(HttpMethod.Get, "api/Category");
 
     public Task<List<ProductDto>> GetProducts(ProductFilter filter)
     {
@@ -49,72 +49,72 @@ public class ApiClient
             query.Add("maxPrice=" + filter.MaxPrice.Value.ToString(CultureInfo.InvariantCulture));
         }
 
-        var url = query.Count == 0 ? "api/products" : "api/products?" + string.Join('&', query);
+        var url = query.Count == 0 ? "api/Product" : "api/Product?" + string.Join('&', query);
         return Send<List<ProductDto>>(HttpMethod.Get, url);
     }
 
-    public Task<ProductDto> GetProduct(int id) => Send<ProductDto>(HttpMethod.Get, $"api/products/{id}");
+    public Task<ProductDto> GetProduct(int id) => Send<ProductDto>(HttpMethod.Get, $"api/Product/{id}");
 
     public Task<List<ReviewDto>> GetReviews(int productId) =>
-        Send<List<ReviewDto>>(HttpMethod.Get, $"api/products/{productId}/reviews");
+        Send<List<ReviewDto>>(HttpMethod.Get, $"api/Review/Product/{productId}");
 
     public Task<ReviewDto> AddReview(int productId, ReviewRequest request) =>
-        Send<ReviewDto>(HttpMethod.Post, $"api/products/{productId}/reviews", request);
+        Send<ReviewDto>(HttpMethod.Post, $"api/Review/Product/{productId}", request);
 
-    public Task<List<PickupPointDto>> GetPickupPoints() => Send<List<PickupPointDto>>(HttpMethod.Get, "api/pickup-points");
+    public Task<List<PickupPointDto>> GetPickupPoints() => Send<List<PickupPointDto>>(HttpMethod.Get, "api/PickupPoint");
 
-    public Task<CartDto> GetCart() => Send<CartDto>(HttpMethod.Get, "api/cart");
+    public Task<CartDto> GetCart() => Send<CartDto>(HttpMethod.Get, "api/Cart");
 
-    public Task<CartDto> AddToCart(AddToCartRequest request) => Send<CartDto>(HttpMethod.Post, "api/cart/items", request);
+    public Task<CartDto> AddToCart(AddToCartRequest request) => Send<CartDto>(HttpMethod.Post, "api/Cart/Items", request);
 
     public Task<CartDto> SetCartQuantity(int productId, int quantity) =>
-        Send<CartDto>(HttpMethod.Put, $"api/cart/items/{productId}", new QuantityRequest(quantity));
+        Send<CartDto>(HttpMethod.Put, $"api/Cart/Items/{productId}", new QuantityRequest(quantity));
 
-    public Task<CartDto> RemoveFromCart(int productId) => Send<CartDto>(HttpMethod.Delete, $"api/cart/items/{productId}");
+    public Task<CartDto> RemoveFromCart(int productId) => Send<CartDto>(HttpMethod.Delete, $"api/Cart/Items/{productId}");
 
-    public Task<List<ProductDto>> GetFavorites() => Send<List<ProductDto>>(HttpMethod.Get, "api/favorites");
+    public Task<List<ProductDto>> GetFavorites() => Send<List<ProductDto>>(HttpMethod.Get, "api/Favorite");
 
-    public Task AddFavorite(int productId) => SendEmpty(HttpMethod.Post, $"api/favorites/{productId}");
+    public Task AddFavorite(int productId) => SendEmpty(HttpMethod.Post, $"api/Favorite/{productId}");
 
-    public Task RemoveFavorite(int productId) => SendEmpty(HttpMethod.Delete, $"api/favorites/{productId}");
+    public Task RemoveFavorite(int productId) => SendEmpty(HttpMethod.Delete, $"api/Favorite/{productId}");
 
     public Task<CartDto> MoveFavoriteToCart(int productId) =>
-        Send<CartDto>(HttpMethod.Post, $"api/favorites/{productId}/to-cart");
+        Send<CartDto>(HttpMethod.Post, $"api/Favorite/{productId}/ToCart");
 
-    public Task<OrderDto> CreateOrder(CreateOrderRequest request) => Send<OrderDto>(HttpMethod.Post, "api/orders", request);
+    public Task<OrderDto> CreateOrder(CreateOrderRequest request) => Send<OrderDto>(HttpMethod.Post, "api/Order", request);
 
     public Task<List<OrderSummaryDto>> GetOrders(bool newestFirst) =>
-        Send<List<OrderSummaryDto>>(HttpMethod.Get, $"api/orders?sort={(newestFirst ? "new" : "old")}");
+        Send<List<OrderSummaryDto>>(HttpMethod.Get, $"api/Order/My?sort={(newestFirst ? "new" : "old")}");
 
-    public Task<OrderDto> GetOrder(int id) => Send<OrderDto>(HttpMethod.Get, $"api/orders/{id}");
+    public Task<OrderDto> GetOrder(int id) => Send<OrderDto>(HttpMethod.Get, $"api/Order/My/{id}");
 
-    public Task<ProductDto> CreateProduct(ProductRequest request) => Send<ProductDto>(HttpMethod.Post, "api/admin/products", request);
+    public Task<ProductDto> CreateProduct(ProductRequest request) => Send<ProductDto>(HttpMethod.Post, "api/Product", request);
 
     public Task<ProductDto> UpdateProduct(int id, ProductRequest request) =>
-        Send<ProductDto>(HttpMethod.Put, $"api/admin/products/{id}", request);
+        Send<ProductDto>(HttpMethod.Put, $"api/Product/{id}", request);
 
     public Task<CategoryDto> CreateCategory(CategoryRequest request) =>
-        Send<CategoryDto>(HttpMethod.Post, "api/admin/categories", request);
+        Send<CategoryDto>(HttpMethod.Post, "api/Category", request);
 
     public Task<CategoryDto> UpdateCategory(int id, CategoryRequest request) =>
-        Send<CategoryDto>(HttpMethod.Put, $"api/admin/categories/{id}", request);
+        Send<CategoryDto>(HttpMethod.Put, $"api/Category/{id}", request);
 
     public Task<PickupPointDto> CreatePickupPoint(PickupPointRequest request) =>
-        Send<PickupPointDto>(HttpMethod.Post, "api/admin/pickup-points", request);
+        Send<PickupPointDto>(HttpMethod.Post, "api/PickupPoint", request);
 
     public Task<PickupPointDto> UpdatePickupPoint(int id, PickupPointRequest request) =>
-        Send<PickupPointDto>(HttpMethod.Put, $"api/admin/pickup-points/{id}", request);
+        Send<PickupPointDto>(HttpMethod.Put, $"api/PickupPoint/{id}", request);
 
-    public Task DeletePickupPoint(int id) => SendEmpty(HttpMethod.Delete, $"api/admin/pickup-points/{id}");
+    public Task DeletePickupPoint(int id) => SendEmpty(HttpMethod.Delete, $"api/PickupPoint/{id}");
 
-    public Task<List<OrderSummaryDto>> GetAllOrders() => Send<List<OrderSummaryDto>>(HttpMethod.Get, "api/admin/orders");
+    public Task<List<OrderSummaryDto>> GetAllOrders() => Send<List<OrderSummaryDto>>(HttpMethod.Get, "api/Order");
 
-    public Task<OrderDto> GetAnyOrder(int id) => Send<OrderDto>(HttpMethod.Get, $"api/admin/orders/{id}");
+    public Task<OrderDto> GetAnyOrder(int id) => Send<OrderDto>(HttpMethod.Get, $"api/Order/{id}");
 
     public Task<OrderDto> SetOrderStatus(int id, string status) =>
-        Send<OrderDto>(HttpMethod.Put, $"api/admin/orders/{id}/status", new StatusRequest(status));
+        Send<OrderDto>(HttpMethod.Put, $"api/Order/{id}/Status", new StatusRequest(status));
 
-    public Task DeleteReview(int id) => SendEmpty(HttpMethod.Delete, $"api/admin/reviews/{id}");
+    public Task DeleteReview(int id) => SendEmpty(HttpMethod.Delete, $"api/Review/{id}");
 
     private async Task<T> Send<T>(HttpMethod method, string url, object? body = null)
     {
@@ -157,16 +157,10 @@ public class ApiClient
 
     private static async Task<string> ReadError(HttpResponseMessage response)
     {
-        try
+        var message = await response.Content.ReadAsStringAsync();
+        if (!string.IsNullOrWhiteSpace(message))
         {
-            var error = await response.Content.ReadFromJsonAsync<ErrorResponse>(Json);
-            if (!string.IsNullOrWhiteSpace(error?.Error))
-            {
-                return error.Error;
-            }
-        }
-        catch (JsonException)
-        {
+            return message;
         }
 
         return response.StatusCode switch
