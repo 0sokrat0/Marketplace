@@ -12,9 +12,13 @@ public class AdminCatalogService(MarketplaceDbContext db, ICatalogService catalo
     private const int MaxDescriptionLength = 2000;
     private const int MaxAddressLength = 300;
 
-    public async Task<ProductDto> CreateProductAsync(ProductRequest request)
+    public async Task<Result<ProductDto>> CreateProductAsync(ProductRequest request)
     {
-        await ValidateProduct(request);
+        if (await CheckProduct(request) is { } invalid)
+        {
+            return invalid;
+        }
+
         var product = new Product();
         Apply(product, request);
         db.Products.Add(product);
@@ -22,37 +26,74 @@ public class AdminCatalogService(MarketplaceDbContext db, ICatalogService catalo
         return await catalog.GetProductAsync(product.Id);
     }
 
-    public async Task<ProductDto> UpdateProductAsync(int id, ProductRequest request)
+    public async Task<Result<ProductDto>> UpdateProductAsync(int id, ProductRequest request)
     {
-        var product = await db.Products.FindAsync(id) ?? throw AppException.NotFound("Товар не найден");
-        await ValidateProduct(request);
+        var product = await db.Products.FindAsync(id);
+        if (product is null)
+        {
+            return Result.NotFound("Товар не найден");
+        }
+
+        if (await CheckProduct(request) is { } invalid)
+        {
+            return invalid;
+        }
+
         Apply(product, request);
         await db.SaveChangesAsync();
         return await catalog.GetProductAsync(product.Id);
     }
 
-    public async Task<CategoryDto> CreateCategoryAsync(CategoryRequest request)
+    public async Task<Result<CategoryDto>> CreateCategoryAsync(CategoryRequest request)
     {
-        var name = ValidateName(request.Name);
-        await EnsureCategoryNameFree(name, null);
+        if (CheckName(request.Name) is { } invalid)
+        {
+            return invalid;
+        }
+
+        var name = request.Name.Trim();
+        if (await CategoryNameTaken(name, null))
+        {
+            return Result.Conflict("Категория с таким названием уже есть");
+        }
+
         var category = new Category { Name = name };
         db.Categories.Add(category);
         await db.SaveChangesAsync();
         return new CategoryDto(category.Id, category.Name);
     }
 
-    public async Task<CategoryDto> UpdateCategoryAsync(int id, CategoryRequest request)
+    public async Task<Result<CategoryDto>> UpdateCategoryAsync(int id, CategoryRequest request)
     {
-        var category = await db.Categories.FindAsync(id) ?? throw AppException.NotFound("Категория не найдена");
-        var name = ValidateName(request.Name);
-        await EnsureCategoryNameFree(name, id);
+        var category = await db.Categories.FindAsync(id);
+        if (category is null)
+        {
+            return Result.NotFound("Категория не найдена");
+        }
+
+        if (CheckName(request.Name) is { } invalid)
+        {
+            return invalid;
+        }
+
+        var name = request.Name.Trim();
+        if (await CategoryNameTaken(name, id))
+        {
+            return Result.Conflict("Категория с таким названием уже есть");
+        }
+
         category.Name = name;
         await db.SaveChangesAsync();
         return new CategoryDto(category.Id, category.Name);
     }
 
-    public async Task<PickupPointDto> CreatePickupPointAsync(PickupPointRequest request)
+    public async Task<Result<PickupPointDto>> CreatePickupPointAsync(PickupPointRequest request)
     {
+        if (CheckPickupPoint(request) is { } invalid)
+        {
+            return invalid;
+        }
+
         var point = new PickupPoint();
         ApplyPickupPoint(point, request);
         db.PickupPoints.Add(point);
@@ -60,53 +101,75 @@ public class AdminCatalogService(MarketplaceDbContext db, ICatalogService catalo
         return new PickupPointDto(point.Id, point.Name, point.Address);
     }
 
-    public async Task<PickupPointDto> UpdatePickupPointAsync(int id, PickupPointRequest request)
+    public async Task<Result<PickupPointDto>> UpdatePickupPointAsync(int id, PickupPointRequest request)
     {
-        var point = await db.PickupPoints.FindAsync(id) ?? throw AppException.NotFound("Пункт выдачи не найден");
+        var point = await db.PickupPoints.FindAsync(id);
+        if (point is null)
+        {
+            return Result.NotFound("Пункт выдачи не найден");
+        }
+
+        if (CheckPickupPoint(request) is { } invalid)
+        {
+            return invalid;
+        }
+
         ApplyPickupPoint(point, request);
         await db.SaveChangesAsync();
         return new PickupPointDto(point.Id, point.Name, point.Address);
     }
 
-    public async Task DeletePickupPointAsync(int id)
+    public async Task<Result> DeletePickupPointAsync(int id)
     {
-        var point = await db.PickupPoints.FindAsync(id) ?? throw AppException.NotFound("Пункт выдачи не найден");
+        var point = await db.PickupPoints.FindAsync(id);
+        if (point is null)
+        {
+            return Result.NotFound("Пункт выдачи не найден");
+        }
+
         if (await db.Orders.AnyAsync(o => o.PickupPointId == id))
         {
-            throw AppException.Conflict("Пункт выдачи используется в заказах, удалить его нельзя");
+            return Result.Conflict("Пункт выдачи используется в заказах, удалить его нельзя");
         }
 
         db.PickupPoints.Remove(point);
         await db.SaveChangesAsync();
+        return Result.NoContent();
     }
 
-    private async Task ValidateProduct(ProductRequest request)
+    private async Task<Failure?> CheckProduct(ProductRequest request)
     {
-        ValidateName(request.Name);
+        if (CheckName(request.Name) is { } invalidName)
+        {
+            return invalidName;
+        }
+
         if (request.Description?.Length > MaxDescriptionLength)
         {
-            throw AppException.BadRequest($"Описание не длиннее {MaxDescriptionLength} символов");
+            return Result.InvalidData($"Описание не длиннее {MaxDescriptionLength} символов");
         }
 
         if (request.Price < 0)
         {
-            throw AppException.BadRequest("Цена не может быть отрицательной");
+            return Result.InvalidData("Цена не может быть отрицательной");
         }
 
         if (request.Stock < 0)
         {
-            throw AppException.BadRequest("Остаток на складе не может быть отрицательным");
+            return Result.InvalidData("Остаток на складе не может быть отрицательным");
         }
 
         if (request.PackSize is <= 0)
         {
-            throw AppException.BadRequest("Количество штук в упаковке должно быть больше нуля");
+            return Result.InvalidData("Количество штук в упаковке должно быть больше нуля");
         }
 
         if (!await db.Categories.AnyAsync(c => c.Id == request.CategoryId))
         {
-            throw AppException.BadRequest("Выберите существующую категорию");
+            return Result.InvalidData("Выберите существующую категорию");
         }
+
+        return null;
     }
 
     private static void Apply(Product product, ProductRequest request)
@@ -121,34 +184,37 @@ public class AdminCatalogService(MarketplaceDbContext db, ICatalogService catalo
         product.IsAvailable = request.IsAvailable;
     }
 
+    private static Failure? CheckPickupPoint(PickupPointRequest request)
+    {
+        if (CheckName(request.Name) is { } invalidName)
+        {
+            return invalidName;
+        }
+
+        if (request.Address?.Trim().Length is not (> 0 and <= MaxAddressLength))
+        {
+            return Result.InvalidData($"Адрес обязателен и не длиннее {MaxAddressLength} символов");
+        }
+
+        return null;
+    }
+
     private static void ApplyPickupPoint(PickupPoint point, PickupPointRequest request)
     {
-        point.Name = ValidateName(request.Name);
-        var address = request.Address?.Trim() ?? string.Empty;
-        if (address.Length is 0 or > MaxAddressLength)
-        {
-            throw AppException.BadRequest($"Адрес обязателен и не длиннее {MaxAddressLength} символов");
-        }
-
-        point.Address = address;
+        point.Name = request.Name.Trim();
+        point.Address = request.Address.Trim();
     }
 
-    private static string ValidateName(string? name)
+    private static Failure? CheckName(string? name)
     {
-        var trimmed = name?.Trim() ?? string.Empty;
-        if (trimmed.Length is 0 or > MaxNameLength)
+        if (name?.Trim().Length is not (> 0 and <= MaxNameLength))
         {
-            throw AppException.BadRequest($"Название обязательно и не длиннее {MaxNameLength} символов");
+            return Result.InvalidData($"Название обязательно и не длиннее {MaxNameLength} символов");
         }
 
-        return trimmed;
+        return null;
     }
 
-    private async Task EnsureCategoryNameFree(string name, int? ownId)
-    {
-        if (await db.Categories.AnyAsync(c => c.Name == name && c.Id != ownId))
-        {
-            throw AppException.Conflict("Категория с таким названием уже есть");
-        }
-    }
+    private Task<bool> CategoryNameTaken(string name, int? ownId) =>
+        db.Categories.AnyAsync(c => c.Name == name && c.Id != ownId);
 }

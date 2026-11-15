@@ -5,12 +5,14 @@ using Microsoft.AspNetCore.Mvc;
 namespace Marketplace.Api.Controllers;
 
 [ApiController]
-[Route("api/auth")]
+[Route("api/[controller]")]
 public class AuthController(IAuthService auth) : ControllerBase
 {
-    [HttpPost("register")]
-    public Task<AuthResponse> Register(RegisterRequest request) => auth.RegisterAsync(request);
+    [HttpPost("Register")]
+    public async Task<IActionResult> Register([FromBody] RegisterRequest request) =>
+        (await auth.RegisterAsync(request)).ToActionResult();
 
-    [HttpPost("login")]
-    public Task<AuthResponse> Login(LoginRequest request) => auth.LoginAsync(request);
+    [HttpPost("Login")]
+    public async Task<IActionResult> Login([FromBody] LoginRequest request) =>
+        (await auth.LoginAsync(request)).ToActionResult();
 }

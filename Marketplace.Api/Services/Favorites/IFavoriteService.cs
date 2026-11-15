@@ -1,14 +1,15 @@
+using Marketplace.Api.Infrastructure;
 using Marketplace.Contracts;
 
 namespace Marketplace.Api.Services.Favorites;
 
 public interface IFavoriteService
 {
-    Task<List<ProductDto>> GetAsync(int userId);
+    Task<Result<List<ProductDto>>> GetAsync(int userId);
 
-    Task AddAsync(int userId, int productId);
+    Task<Result> AddAsync(int userId, int productId);
 
-    Task RemoveAsync(int userId, int productId);
+    Task<Result> RemoveAsync(int userId, int productId);
 
-    Task<CartDto> MoveToCartAsync(int userId, int productId);
+    Task<Result<CartDto>> MoveToCartAsync(int userId, int productId);
 }

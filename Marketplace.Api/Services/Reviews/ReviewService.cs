@@ -9,9 +9,13 @@ public class ReviewService(MarketplaceDbContext db) : IReviewService
 {
     private const int MaxTextLength = 1000;
 
-    public async Task<List<ReviewDto>> GetAsync(int productId)
+    public async Task<Result<List<ReviewDto>>> GetAsync(int productId)
     {
-        await EnsureProductExists(productId);
+        if (!await db.Products.AnyAsync(p => p.Id == productId))
+        {
+            return Result.NotFound("Товар не найден");
+        }
+
         return await db.Reviews
             .AsNoTracking()
             .Where(r => r.ProductId == productId)
@@ -20,20 +24,23 @@ public class ReviewService(MarketplaceDbContext db) : IReviewService
             .ToListAsync();
     }
 
-    public async Task<ReviewDto> SaveAsync(int userId, int productId, ReviewRequest request)
+    public async Task<Result<ReviewDto>> SaveAsync(int userId, int productId, ReviewRequest request)
     {
         if (request.Rating is < OrderRules.MinRating or > OrderRules.MaxRating)
         {
-            throw AppException.BadRequest($"Оценка от {OrderRules.MinRating} до {OrderRules.MaxRating}");
+            return Result.InvalidData($"Оценка от {OrderRules.MinRating} до {OrderRules.MaxRating}");
         }
 
         var text = request.Text?.Trim() ?? string.Empty;
         if (text.Length > MaxTextLength)
         {
-            throw AppException.BadRequest($"Отзыв не длиннее {MaxTextLength} символов");
+            return Result.InvalidData($"Отзыв не длиннее {MaxTextLength} символов");
         }
 
-        await EnsureProductExists(productId);
+        if (!await db.Products.AnyAsync(p => p.Id == productId))
+        {
+            return Result.NotFound("Товар не найден");
+        }
 
         var review = await db.Reviews.FirstOrDefaultAsync(r => r.ProductId == productId && r.UserId == userId);
         if (review is null)
@@ -51,19 +58,16 @@ public class ReviewService(MarketplaceDbContext db) : IReviewService
         return new ReviewDto(review.Id, productId, login, review.Rating, review.Text, review.CreatedAt);
     }
 
-    public async Task DeleteAsync(int reviewId)
+    public async Task<Result> DeleteAsync(int reviewId)
     {
-        var review = await db.Reviews.FindAsync(reviewId)
-            ?? throw AppException.NotFound("Отзыв не найден");
+        var review = await db.Reviews.FindAsync(reviewId);
+        if (review is null)
+        {
+            return Result.NotFound("Отзыв не найден");
+        }
+
         db.Reviews.Remove(review);
         await db.SaveChangesAsync();
-    }
-
-    private async Task EnsureProductExists(int productId)
-    {
-        if (!await db.Products.AnyAsync(p => p.Id == productId))
-        {
-            throw AppException.NotFound("Товар не найден");
-        }
+        return Result.NoContent();
     }
 }

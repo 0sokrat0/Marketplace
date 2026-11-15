@@ -12,17 +12,22 @@ public class AuthService(MarketplaceDbContext db, IPasswordHasher hasher, IJwtSe
     private const int MaxLoginLength = 32;
     private const int MinPasswordLength = 6;
 
-    public async Task<AuthResponse> RegisterAsync(RegisterRequest request)
+    public async Task<Result<AuthResponse>> RegisterAsync(RegisterRequest request)
     {
-        var login = NormalizeLogin(request.Login);
+        var login = request.Login.Trim();
+        if (CheckLogin(login) is { } badLogin)
+        {
+            return badLogin;
+        }
+
         if (request.Password.Length < MinPasswordLength)
         {
-            throw AppException.BadRequest($"Пароль должен быть не короче {MinPasswordLength} символов");
+            return Result.InvalidData($"Пароль должен быть не короче {MinPasswordLength} символов");
         }
 
         if (request.Password != request.RepeatPassword)
         {
-            throw AppException.BadRequest("Пароли не совпадают");
+            return Result.InvalidData("Пароли не совпадают");
         }
 
         var existing = await FindUser(login);
@@ -38,12 +43,12 @@ public class AuthService(MarketplaceDbContext db, IPasswordHasher hasher, IJwtSe
         return ToResponse(user);
     }
 
-    public async Task<AuthResponse> LoginAsync(LoginRequest request)
+    public async Task<Result<AuthResponse>> LoginAsync(LoginRequest request)
     {
         var user = await FindUser(request.Login.Trim());
         if (user is null)
         {
-            throw AppException.Unauthorized("Неверный логин или пароль");
+            return Result.Unauthorized("Неверный логин или пароль");
         }
 
         return SignIn(user, request.Password);
@@ -52,11 +57,11 @@ public class AuthService(MarketplaceDbContext db, IPasswordHasher hasher, IJwtSe
     private Task<User?> FindUser(string login) =>
         db.Users.Include(u => u.Role).SingleOrDefaultAsync(u => u.Login == login);
 
-    private AuthResponse SignIn(User user, string password)
+    private Result<AuthResponse> SignIn(User user, string password)
     {
         if (!hasher.Verify(password, user.PasswordHash))
         {
-            throw AppException.Unauthorized("Неверный логин или пароль");
+            return Result.Unauthorized("Неверный логин или пароль");
         }
 
         return ToResponse(user);
@@ -64,15 +69,14 @@ public class AuthService(MarketplaceDbContext db, IPasswordHasher hasher, IJwtSe
 
     private AuthResponse ToResponse(User user) => new(jwt.CreateToken(user), user.Login, user.Role.Name);
 
-    private static string NormalizeLogin(string login)
+    private static Failure? CheckLogin(string login)
     {
-        var trimmed = login.Trim();
-        if (trimmed.Length is < MinLoginLength or > MaxLoginLength || !trimmed.All(c => char.IsLetterOrDigit(c) || c == '_'))
+        if (login.Length is < MinLoginLength or > MaxLoginLength || !login.All(c => char.IsLetterOrDigit(c) || c == '_'))
         {
-            throw AppException.BadRequest(
+            return Result.InvalidData(
                 $"Логин от {MinLoginLength} до {MaxLoginLength} символов: буквы, цифры и подчеркивание");
         }
 
-        return trimmed;
+        return null;
     }
 }

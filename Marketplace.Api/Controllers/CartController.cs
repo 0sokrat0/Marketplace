@@ -7,20 +7,22 @@ using Microsoft.AspNetCore.Mvc;
 namespace Marketplace.Api.Controllers;
 
 [ApiController]
+[Route("api/[controller]")]
 [Authorize]
-[Route("api/cart")]
 public class CartController(ICartService cart) : ControllerBase
 {
     [HttpGet]
-    public Task<CartDto> Get() => cart.GetAsync(User.GetUserId());
+    public async Task<IActionResult> Get() => (await cart.GetAsync(User.GetUserId())).ToActionResult();
 
-    [HttpPost("items")]
-    public Task<CartDto> Add(AddToCartRequest request) => cart.AddAsync(User.GetUserId(), request);
+    [HttpPost("Items")]
+    public async Task<IActionResult> Add([FromBody] AddToCartRequest request) =>
+        (await cart.AddAsync(User.GetUserId(), request)).ToActionResult();
 
-    [HttpPut("items/{productId:int}")]
-    public Task<CartDto> SetQuantity(int productId, QuantityRequest request) =>
-        cart.SetQuantityAsync(User.GetUserId(), productId, request.Quantity);
+    [HttpPut("Items/{productId:int}")]
+    public async Task<IActionResult> SetQuantity([FromRoute] int productId, [FromBody] QuantityRequest request) =>
+        (await cart.SetQuantityAsync(User.GetUserId(), productId, request.Quantity)).ToActionResult();
 
-    [HttpDelete("items/{productId:int}")]
-    public Task<CartDto> Remove(int productId) => cart.RemoveAsync(User.GetUserId(), productId);
+    [HttpDelete("Items/{productId:int}")]
+    public async Task<IActionResult> Remove([FromRoute] int productId) =>
+        (await cart.RemoveAsync(User.GetUserId(), productId)).ToActionResult();
 }

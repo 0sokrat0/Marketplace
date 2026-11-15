@@ -1,18 +1,19 @@
+using Marketplace.Api.Infrastructure;
 using Marketplace.Contracts;
 
 namespace Marketplace.Api.Services.Orders;
 
 public interface IOrderService
 {
-    Task<OrderDto> CreateAsync(int userId, CreateOrderRequest request);
+    Task<Result<OrderDto>> CreateAsync(int userId, CreateOrderRequest request);
 
-    Task<List<OrderSummaryDto>> ListForUserAsync(int userId, bool newestFirst);
+    Task<Result<List<OrderSummaryDto>>> ListForUserAsync(int userId, bool newestFirst);
 
-    Task<OrderDto> GetForUserAsync(int userId, int orderId);
+    Task<Result<OrderDto>> GetForUserAsync(int userId, int orderId);
 
-    Task<List<OrderSummaryDto>> ListAllAsync();
+    Task<Result<List<OrderSummaryDto>>> ListAllAsync();
 
-    Task<OrderDto> GetAnyAsync(int orderId);
+    Task<Result<OrderDto>> GetAnyAsync(int orderId);
 
-    Task<OrderDto> SetStatusAsync(int orderId, string status);
+    Task<Result<OrderDto>> SetStatusAsync(int orderId, string status);
 }

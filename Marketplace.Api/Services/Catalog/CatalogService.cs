@@ -7,14 +7,21 @@ namespace Marketplace.Api.Services.Catalog;
 
 public class CatalogService(MarketplaceDbContext db) : ICatalogService
 {
-    public Task<List<CategoryDto>> GetCategoriesAsync() =>
-        db.Categories
+    public async Task<Result<List<CategoryDto>>> GetCategoriesAsync() =>
+        await db.Categories
             .AsNoTracking()
             .OrderBy(c => c.Name)
             .Select(c => new CategoryDto(c.Id, c.Name))
             .ToListAsync();
 
-    public async Task<List<ProductDto>> GetProductsAsync(ProductFilter filter)
+    public async Task<Result<List<PickupPointDto>>> GetPickupPointsAsync() =>
+        await db.PickupPoints
+            .AsNoTracking()
+            .OrderBy(p => p.Name)
+            .Select(p => new PickupPointDto(p.Id, p.Name, p.Address))
+            .ToListAsync();
+
+    public async Task<Result<List<ProductDto>>> GetProductsAsync(ProductFilter filter)
     {
         var query = db.Products.AsNoTracking().Include(p => p.Category).AsQueryable();
 
@@ -44,10 +51,14 @@ public class CatalogService(MarketplaceDbContext db) : ICatalogService
         return await ToDtosAsync(products);
     }
 
-    public async Task<ProductDto> GetProductAsync(int id)
+    public async Task<Result<ProductDto>> GetProductAsync(int id)
     {
-        var product = await db.Products.AsNoTracking().Include(p => p.Category).FirstOrDefaultAsync(p => p.Id == id)
-            ?? throw AppException.NotFound("Товар не найден");
+        var product = await db.Products.AsNoTracking().Include(p => p.Category).FirstOrDefaultAsync(p => p.Id == id);
+        if (product is null)
+        {
+            return Result.NotFound("Товар не найден");
+        }
+
         return (await ToDtosAsync([product]))[0];
     }
 

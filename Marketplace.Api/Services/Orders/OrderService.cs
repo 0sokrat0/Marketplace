@@ -10,19 +10,26 @@ public class OrderService(MarketplaceDbContext db) : IOrderService
     private const int MinAddressLength = 5;
     private const int MaxAddressLength = 200;
 
-    public async Task<OrderDto> CreateAsync(int userId, CreateOrderRequest request)
+    public async Task<Result<OrderDto>> CreateAsync(int userId, CreateOrderRequest request)
     {
         if (!DeliveryMethods.All.Contains(request.DeliveryMethod))
         {
-            throw AppException.BadRequest("Выберите способ получения: доставка или самовывоз");
+            return Result.InvalidData("Выберите способ получения: доставка или самовывоз");
         }
 
         var fromCart = request.BuyNow is null;
-        var lines = fromCart ? await LinesFromCart(userId) : [await LineForBuyNow(request.BuyNow!)];
+        var linesResult = fromCart ? await LinesFromCart(userId) : await LineForBuyNow(request.BuyNow!);
+        if (linesResult.Data is not { } lines)
+        {
+            return linesResult.ToFailure();
+        }
 
         foreach (var (product, quantity) in lines)
         {
-            EnsureCanBuy(product, quantity);
+            if (CheckCanBuy(product, quantity) is { } unavailable)
+            {
+                return unavailable;
+            }
         }
 
         var total = lines.Sum(l => l.Product.Price * l.Quantity);
@@ -33,13 +40,13 @@ public class OrderService(MarketplaceDbContext db) : IOrderService
         {
             if (!OrderRules.IsDeliveryAvailable(total))
             {
-                throw AppException.BadRequest(
+                return Result.InvalidData(
                     $"Доставка по адресу доступна для заказов от {OrderRules.DeliveryThreshold:0} ₽, выберите самовывоз");
             }
 
             if (address is null || address.Length is < MinAddressLength or > MaxAddressLength)
             {
-                throw AppException.BadRequest($"Укажите адрес доставки, от {MinAddressLength} до {MaxAddressLength} символов");
+                return Result.InvalidData($"Укажите адрес доставки, от {MinAddressLength} до {MaxAddressLength} символов");
             }
         }
         else
@@ -50,7 +57,7 @@ public class OrderService(MarketplaceDbContext db) : IOrderService
                 : null;
             if (pickupPoint is null)
             {
-                throw AppException.BadRequest("Выберите пункт выдачи из списка");
+                return Result.InvalidData("Выберите пункт выдачи из списка");
             }
         }
 
@@ -88,7 +95,7 @@ public class OrderService(MarketplaceDbContext db) : IOrderService
         return await GetForUserAsync(userId, order.Id);
     }
 
-    public async Task<List<OrderSummaryDto>> ListForUserAsync(int userId, bool newestFirst)
+    public async Task<Result<List<OrderSummaryDto>>> ListForUserAsync(int userId, bool newestFirst)
     {
         var query = WithDetails(db.Orders.AsNoTracking()).Where(o => o.UserId == userId);
         query = newestFirst
@@ -99,15 +106,19 @@ public class OrderService(MarketplaceDbContext db) : IOrderService
         return orders.Select(OrderMapper.ToSummary).ToList();
     }
 
-    public async Task<OrderDto> GetForUserAsync(int userId, int orderId)
+    public async Task<Result<OrderDto>> GetForUserAsync(int userId, int orderId)
     {
         var order = await WithDetails(db.Orders.AsNoTracking())
-            .FirstOrDefaultAsync(o => o.Id == orderId && o.UserId == userId)
-            ?? throw AppException.NotFound("Заказ не найден");
+            .FirstOrDefaultAsync(o => o.Id == orderId && o.UserId == userId);
+        if (order is null)
+        {
+            return Result.NotFound("Заказ не найден");
+        }
+
         return OrderMapper.ToDto(order);
     }
 
-    public async Task<List<OrderSummaryDto>> ListAllAsync()
+    public async Task<Result<List<OrderSummaryDto>>> ListAllAsync()
     {
         var orders = await WithDetails(db.Orders.AsNoTracking())
             .OrderByDescending(o => o.CreatedAt)
@@ -116,25 +127,33 @@ public class OrderService(MarketplaceDbContext db) : IOrderService
         return orders.Select(OrderMapper.ToSummary).ToList();
     }
 
-    public async Task<OrderDto> GetAnyAsync(int orderId)
+    public async Task<Result<OrderDto>> GetAnyAsync(int orderId)
     {
-        var order = await WithDetails(db.Orders.AsNoTracking()).FirstOrDefaultAsync(o => o.Id == orderId)
-            ?? throw AppException.NotFound("Заказ не найден");
+        var order = await WithDetails(db.Orders.AsNoTracking()).FirstOrDefaultAsync(o => o.Id == orderId);
+        if (order is null)
+        {
+            return Result.NotFound("Заказ не найден");
+        }
+
         return OrderMapper.ToDto(order);
     }
 
-    public async Task<OrderDto> SetStatusAsync(int orderId, string status)
+    public async Task<Result<OrderDto>> SetStatusAsync(int orderId, string status)
     {
         if (!OrderStatuses.All.Contains(status))
         {
-            throw AppException.BadRequest("Неизвестный статус заказа");
+            return Result.InvalidData("Неизвестный статус заказа");
         }
 
-        var order = await WithDetails(db.Orders).FirstOrDefaultAsync(o => o.Id == orderId)
-            ?? throw AppException.NotFound("Заказ не найден");
+        var order = await WithDetails(db.Orders).FirstOrDefaultAsync(o => o.Id == orderId);
+        if (order is null)
+        {
+            return Result.NotFound("Заказ не найден");
+        }
+
         if (order.Status.Name == OrderStatuses.Cancelled)
         {
-            throw AppException.BadRequest("Статус отмененного заказа изменить нельзя");
+            return Result.InvalidData("Статус отмененного заказа изменить нельзя");
         }
 
         if (status == OrderStatuses.Cancelled)
@@ -150,7 +169,7 @@ public class OrderService(MarketplaceDbContext db) : IOrderService
         return await GetAnyAsync(orderId);
     }
 
-    private async Task<List<(Product Product, int Quantity)>> LinesFromCart(int userId)
+    private async Task<Result<List<(Product Product, int Quantity)>>> LinesFromCart(int userId)
     {
         var items = await db.CartItems
             .Where(c => c.UserId == userId)
@@ -158,35 +177,41 @@ public class OrderService(MarketplaceDbContext db) : IOrderService
             .ToListAsync();
         if (items.Count == 0)
         {
-            throw AppException.BadRequest("Корзина пуста");
+            return Result.InvalidData("Корзина пуста");
         }
 
         return items.Select(c => (c.Product, c.Quantity)).ToList();
     }
 
-    private async Task<(Product Product, int Quantity)> LineForBuyNow(OrderItemRequest buyNow)
+    private async Task<Result<List<(Product Product, int Quantity)>>> LineForBuyNow(OrderItemRequest buyNow)
     {
         if (buyNow.Quantity < 1)
         {
-            throw AppException.BadRequest("Количество должно быть больше нуля");
+            return Result.InvalidData("Количество должно быть больше нуля");
         }
 
-        var product = await db.Products.FindAsync(buyNow.ProductId)
-            ?? throw AppException.NotFound("Товар не найден");
-        return (product, buyNow.Quantity);
+        var product = await db.Products.FindAsync(buyNow.ProductId);
+        if (product is null)
+        {
+            return Result.NotFound("Товар не найден");
+        }
+
+        return new List<(Product Product, int Quantity)> { (product, buyNow.Quantity) };
     }
 
-    private static void EnsureCanBuy(Product product, int quantity)
+    private static Failure? CheckCanBuy(Product product, int quantity)
     {
         if (!product.IsAvailable || product.Stock <= 0)
         {
-            throw AppException.BadRequest($"Товар «{product.Name}» недоступен для покупки");
+            return Result.InvalidData($"Товар «{product.Name}» недоступен для покупки");
         }
 
         if (quantity > product.Stock)
         {
-            throw AppException.BadRequest($"Товара «{product.Name}» на складе осталось {product.Stock} шт.");
+            return Result.InvalidData($"Товара «{product.Name}» на складе осталось {product.Stock} шт.");
         }
+
+        return null;
     }
 
     private static IQueryable<Order> WithDetails(IQueryable<Order> orders) => orders

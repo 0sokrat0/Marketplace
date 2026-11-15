@@ -2,8 +2,8 @@ namespace Marketplace.Contracts;
 
 public static class Roles
 {
-    public const string Admin = "Admin";
-    public const string User = "User";
+    public const string Admin = "Администратор";
+    public const string User = "Пользователь";
 }
 
 public static class DeliveryMethods
