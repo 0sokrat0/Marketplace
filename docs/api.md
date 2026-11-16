@@ -1,50 +1,60 @@
 # REST API
 
-Ошибки возвращаются в виде `{"error": "текст"}` с кодами 400, 401, 403, 404, 409. Авторизация: заголовок
-`Authorization: Bearer <token>`, токен выдают `register` и `login`.
+Интерактивная документация открывается в Swagger: `/swagger`. Токен вводится кнопкой Authorize.
 
-Доступ: **гость** без токена, **пользователь** с ролью User, **админ** с ролью Admin.
+Сервисы возвращают `Result<T>`, контроллер превращает его в ответ через `ToActionResult()`. Ошибки приходят простой
+строкой с кодами 400, 401, 403, 404, 409. Авторизация: заголовок `Authorization: Bearer <token>`, токен выдают
+`Register` и `Login`.
+
+Доступ: **гость** без токена, **пользователь** с ролью «Пользователь», **админ** с ролью «Администратор».
+Контроллеры устроены по ресурсам, права на изменение задаются атрибутом `[Authorize(Roles = ...)]` на методе.
 
 ## Авторизация
 
 | Метод | Адрес | Доступ | Описание |
 |---|---|---|---|
-| POST | `/api/auth/register` | гость | регистрация, повторная регистрация с тем же паролем выполняет вход |
-| POST | `/api/auth/login` | гость | вход |
+| POST | `/api/Auth/Register` | гость | регистрация, повторная регистрация с тем же паролем выполняет вход |
+| POST | `/api/Auth/Login` | гость | вход |
 
 ## Каталог
 
 | Метод | Адрес | Доступ | Описание |
 |---|---|---|---|
-| GET | `/api/categories` | гость | категории |
-| GET | `/api/products?search&categoryId&minPrice&maxPrice` | гость | поиск и фильтры |
-| GET | `/api/products/{id}` | гость | товар |
-| GET | `/api/products/{id}/reviews` | гость | отзывы |
-| POST | `/api/products/{id}/reviews` | пользователь | оценка 1-5 и текст, один отзыв на пользователя |
-| GET | `/api/pickup-points` | гость | пункты выдачи |
+| GET | `/api/Category` | гость | категории |
+| POST, PUT | `/api/Category`, `/api/Category/{id}` | админ | добавить и изменить категорию |
+| GET | `/api/Product?search&categoryId&minPrice&maxPrice` | гость | поиск и фильтры |
+| GET | `/api/Product/{id}` | гость | товар |
+| POST, PUT | `/api/Product`, `/api/Product/{id}` | админ | добавить и изменить товар: цена, описание, категория, изображение, остаток, доступность |
+| GET | `/api/Review/Product/{productId}` | гость | отзывы |
+| POST | `/api/Review/Product/{productId}` | пользователь | оценка 1-5 и текст, один отзыв на пользователя |
+| DELETE | `/api/Review/{id}` | админ | удалить отзыв |
+| GET | `/api/PickupPoint` | гость | пункты выдачи |
+| POST, PUT, DELETE | `/api/PickupPoint[/{id}]` | админ | управление пунктами выдачи, используемый в заказах не удаляется |
 
 ## Корзина и избранное
 
 | Метод | Адрес | Описание |
 |---|---|---|
-| GET | `/api/cart` | корзина с итогом |
-| POST | `/api/cart/items` | добавить товар |
-| PUT | `/api/cart/items/{productId}` | изменить количество |
-| DELETE | `/api/cart/items/{productId}` | удалить товар |
-| GET | `/api/favorites` | избранное |
-| POST | `/api/favorites/{productId}` | добавить |
-| DELETE | `/api/favorites/{productId}` | убрать |
-| POST | `/api/favorites/{productId}/to-cart` | перенести в корзину |
+| GET | `/api/Cart` | корзина с итогом |
+| POST | `/api/Cart/Items` | добавить товар |
+| PUT | `/api/Cart/Items/{productId}` | изменить количество |
+| DELETE | `/api/Cart/Items/{productId}` | удалить товар |
+| GET | `/api/Favorite` | избранное |
+| POST | `/api/Favorite/{productId}` | добавить |
+| DELETE | `/api/Favorite/{productId}` | убрать |
+| POST | `/api/Favorite/{productId}/ToCart` | перенести в корзину |
 
 ## Заказы
 
-| Метод | Адрес | Описание |
-|---|---|---|
-| POST | `/api/orders` | оформить заказ |
-| GET | `/api/orders?sort=new\|old` | история заказов |
-| GET | `/api/orders/{id}` | состав заказа |
+| Метод | Адрес | Доступ | Описание |
+|---|---|---|---|
+| POST | `/api/Order` | пользователь | оформить заказ |
+| GET | `/api/Order/My?sort=new\|old` | пользователь | история своих заказов |
+| GET | `/api/Order/My/{id}` | пользователь | состав своего заказа |
+| GET | `/api/Order`, `/api/Order/{id}` | админ | все заказы |
+| PUT | `/api/Order/{id}/Status` | админ | сменить статус |
 
-Тело `POST /api/orders`:
+Тело `POST /api/Order`:
 
 ```json
 { "deliveryMethod": "Самовывоз", "pickupPointId": 1, "address": null,
@@ -58,16 +68,5 @@
 - сумма от 600 рублей: доставка по адресу или самовывоз;
 - в позиции заказа сохраняется цена на момент покупки;
 - остаток уменьшается при оформлении и возвращается при отмене заказа.
-
-## Администратор
-
-| Метод | Адрес | Описание |
-|---|---|---|
-| POST, PUT | `/api/admin/products`, `/api/admin/products/{id}` | добавить и изменить товар: цена, описание, категория, изображение, остаток, доступность |
-| POST, PUT | `/api/admin/categories`, `/api/admin/categories/{id}` | категории |
-| POST, PUT, DELETE | `/api/admin/pickup-points[/{id}]` | пункты выдачи, используемый в заказах не удаляется |
-| GET | `/api/admin/orders`, `/api/admin/orders/{id}` | все заказы |
-| PUT | `/api/admin/orders/{id}/status` | сменить статус |
-| DELETE | `/api/admin/reviews/{id}` | удалить отзыв |
 
 Покупки удалять нельзя, поэтому у товара нет удаления: его делают недоступным.

@@ -34,13 +34,14 @@ dotnet run --project Marketplace.Api
 ```
 
 API слушает адрес из `launchSettings.json`. База `marketplace.db` создается и заполняется при первом запуске.
+Swagger: `/swagger`.
 
 Тестовые учетные записи:
 
 | Логин | Пароль | Роль |
 |---|---|---|
-| admin | admin123 | Admin |
-| user | user123 | User |
+| admin | admin123 | Администратор |
+| user | user123 | Пользователь |
 
 ## Запуск клиента
 
