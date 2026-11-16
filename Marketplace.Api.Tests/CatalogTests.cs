@@ -10,8 +10,8 @@ public class CatalogTests : ApiTestBase
     {
         var guest = Guest();
 
-        var products = await guest.Get("api/products");
-        var reviews = await guest.Get($"api/products/{Mug}/reviews");
+        var products = await guest.Get("api/Product");
+        var reviews = await guest.Get($"api/Review/Product/{Mug}");
 
         Assert.Equal(HttpStatusCode.OK, products.Status);
         Assert.Equal(13, products.Json<List<ProductDto>>().Count);
@@ -23,15 +23,15 @@ public class CatalogTests : ApiTestBase
     {
         var guest = Guest();
 
-        Assert.Equal(HttpStatusCode.Unauthorized, (await guest.Get("api/cart")).Status);
-        Assert.Equal(HttpStatusCode.Unauthorized, (await guest.Get("api/favorites")).Status);
-        Assert.Equal(HttpStatusCode.Unauthorized, (await guest.Get("api/orders")).Status);
+        Assert.Equal(HttpStatusCode.Unauthorized, (await guest.Get("api/Cart")).Status);
+        Assert.Equal(HttpStatusCode.Unauthorized, (await guest.Get("api/Favorite")).Status);
+        Assert.Equal(HttpStatusCode.Unauthorized, (await guest.Get("api/Order/My")).Status);
     }
 
     [Fact]
     public async Task Search_IgnoresCaseForCyrillic()
     {
-        var found = (await Guest().Get("api/products?search=" + Uri.EscapeDataString("КРУЖ"))).Json<List<ProductDto>>();
+        var found = (await Guest().Get("api/Product?search=" + Uri.EscapeDataString("КРУЖ"))).Json<List<ProductDto>>();
 
         Assert.Single(found);
         Assert.Equal("Кружка керамическая", found[0].Name);
@@ -42,8 +42,8 @@ public class CatalogTests : ApiTestBase
     {
         var guest = Guest();
 
-        var electronics = (await guest.Get("api/products?categoryId=3")).Json<List<ProductDto>>();
-        var middle = (await guest.Get("api/products?minPrice=500&maxPrice=1000")).Json<List<ProductDto>>();
+        var electronics = (await guest.Get("api/Product?categoryId=3")).Json<List<ProductDto>>();
+        var middle = (await guest.Get("api/Product?minPrice=500&maxPrice=1000")).Json<List<ProductDto>>();
 
         Assert.Equal(3, electronics.Count);
         Assert.All(electronics, p => Assert.Equal(3, p.CategoryId));
@@ -56,9 +56,9 @@ public class CatalogTests : ApiTestBase
     {
         var guest = Guest();
 
-        var pens = (await guest.Get("api/products/1")).Json<ProductDto>();
-        var empty = (await guest.Get($"api/products/{OutOfStock}")).Json<ProductDto>();
-        var withdrawn = (await guest.Get($"api/products/{Withdrawn}")).Json<ProductDto>();
+        var pens = (await guest.Get("api/Product/1")).Json<ProductDto>();
+        var empty = (await guest.Get($"api/Product/{OutOfStock}")).Json<ProductDto>();
+        var withdrawn = (await guest.Get($"api/Product/{Withdrawn}")).Json<ProductDto>();
 
         Assert.Equal(10, pens.PackSize);
         Assert.True(pens.CanBuy);

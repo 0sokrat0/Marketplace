@@ -34,5 +34,3 @@ public record OrderDto(
     IReadOnlyList<OrderItemDto> Items);
 
 public record StatusRequest(string Status);
-
-public record ErrorResponse(string Error);

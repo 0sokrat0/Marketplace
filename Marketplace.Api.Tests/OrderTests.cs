@@ -13,8 +13,8 @@ public class OrderTests : ApiTestBase
     {
         var user = await User();
 
-        var delivery = await user.Post("api/orders", Delivery(Cable));
-        var pickup = await user.Post("api/orders", PickupOrder(Cable));
+        var delivery = await user.Post("api/Order", Delivery(Cable));
+        var pickup = await user.Post("api/Order", PickupOrder(Cable));
 
         Assert.Equal(HttpStatusCode.BadRequest, delivery.Status);
         Assert.Equal(HttpStatusCode.OK, pickup.Status);
@@ -25,7 +25,7 @@ public class OrderTests : ApiTestBase
     {
         var user = await User();
 
-        var result = await user.Post("api/orders", Delivery(Speaker));
+        var result = await user.Post("api/Order", Delivery(Speaker));
 
         Assert.Equal(HttpStatusCode.OK, result.Status);
         var order = result.Json<OrderDto>();
@@ -38,9 +38,9 @@ public class OrderTests : ApiTestBase
     {
         var user = await User();
 
-        var noAddress = await user.Post("api/orders",
+        var noAddress = await user.Post("api/Order",
             new CreateOrderRequest(DeliveryMethods.Delivery, null, null, new OrderItemRequest(Speaker, 1)));
-        var noPoint = await user.Post("api/orders",
+        var noPoint = await user.Post("api/Order",
             new CreateOrderRequest(DeliveryMethods.Pickup, null, 99, new OrderItemRequest(Cable, 1)));
 
         Assert.Equal(HttpStatusCode.BadRequest, noAddress.Status);
@@ -51,25 +51,25 @@ public class OrderTests : ApiTestBase
     public async Task CartCheckout_DecreasesStockAndClearsCart()
     {
         var user = await User();
-        await user.Post("api/cart/items", ToCart(Cable, 2));
+        await user.Post("api/Cart/Items", ToCart(Cable, 2));
 
-        var order = (await user.Post("api/orders", new CreateOrderRequest(DeliveryMethods.Pickup, null, 1, null))).Json<OrderDto>();
+        var order = (await user.Post("api/Order", new CreateOrderRequest(DeliveryMethods.Pickup, null, 1, null))).Json<OrderDto>();
 
         Assert.Equal(620m, order.Total);
         Assert.Equal(OrderStatuses.Placed, order.Status);
-        Assert.Empty((await user.Get("api/cart")).Json<CartDto>().Items);
-        Assert.Equal(98, (await Guest().Get($"api/products/{Cable}")).Json<ProductDto>().Stock);
+        Assert.Empty((await user.Get("api/Cart")).Json<CartDto>().Items);
+        Assert.Equal(98, (await Guest().Get($"api/Product/{Cable}")).Json<ProductDto>().Stock);
     }
 
     [Fact]
     public async Task BuyNow_DoesNotTouchCart()
     {
         var user = await User();
-        await user.Post("api/cart/items", ToCart(Mug));
+        await user.Post("api/Cart/Items", ToCart(Mug));
 
-        await user.Post("api/orders", PickupOrder(Cable));
+        await user.Post("api/Order", PickupOrder(Cable));
 
-        Assert.Single((await user.Get("api/cart")).Json<CartDto>().Items);
+        Assert.Single((await user.Get("api/Cart")).Json<CartDto>().Items);
     }
 
     [Fact]
@@ -77,9 +77,9 @@ public class OrderTests : ApiTestBase
     {
         var user = await User();
 
-        Assert.Equal(HttpStatusCode.BadRequest, (await user.Post("api/orders", PickupOrder(OutOfStock))).Status);
-        Assert.Equal(HttpStatusCode.BadRequest, (await user.Post("api/orders", PickupOrder(Withdrawn))).Status);
-        Assert.Equal(HttpStatusCode.BadRequest, (await user.Post("api/orders", PickupOrder(Speaker, 99))).Status);
+        Assert.Equal(HttpStatusCode.BadRequest, (await user.Post("api/Order", PickupOrder(OutOfStock))).Status);
+        Assert.Equal(HttpStatusCode.BadRequest, (await user.Post("api/Order", PickupOrder(Withdrawn))).Status);
+        Assert.Equal(HttpStatusCode.BadRequest, (await user.Post("api/Order", PickupOrder(Speaker, 99))).Status);
     }
 
     [Fact]
@@ -87,7 +87,7 @@ public class OrderTests : ApiTestBase
     {
         var user = await User();
 
-        var result = await user.Post("api/orders", new CreateOrderRequest(DeliveryMethods.Pickup, null, 1, null));
+        var result = await user.Post("api/Order", new CreateOrderRequest(DeliveryMethods.Pickup, null, 1, null));
 
         Assert.Equal(HttpStatusCode.BadRequest, result.Status);
     }
@@ -97,12 +97,12 @@ public class OrderTests : ApiTestBase
     {
         var user = await User();
         var admin = await Admin();
-        var placed = (await user.Post("api/orders", PickupOrder(Speaker, 2))).Json<OrderDto>();
+        var placed = (await user.Post("api/Order", PickupOrder(Speaker, 2))).Json<OrderDto>();
 
-        await admin.Put($"api/admin/products/{Speaker}", ProductWithPrice("Портативная колонка", 3000, 3, 6));
+        await admin.Put($"api/Product/{Speaker}", ProductWithPrice("Портативная колонка", 3000, 3, 6));
 
-        var old = (await user.Get($"api/orders/{placed.Id}")).Json<OrderDto>();
-        var fresh = (await user.Post("api/orders", PickupOrder(Speaker))).Json<OrderDto>();
+        var old = (await user.Get($"api/Order/My/{placed.Id}")).Json<OrderDto>();
+        var fresh = (await user.Post("api/Order", PickupOrder(Speaker))).Json<OrderDto>();
         Assert.Equal(4980m, old.Total);
         Assert.Equal(2490m, old.Items[0].UnitPrice);
         Assert.Equal(3000m, fresh.Total);
@@ -113,17 +113,17 @@ public class OrderTests : ApiTestBase
     {
         var user = await User("owner");
         var other = await User("stranger");
-        var first = (await user.Post("api/orders", PickupOrder(Mug))).Json<OrderDto>();
+        var first = (await user.Post("api/Order", PickupOrder(Mug))).Json<OrderDto>();
         await Task.Delay(1100);
-        var second = (await user.Post("api/orders", PickupOrder(Cable))).Json<OrderDto>();
-        var foreign = (await other.Post("api/orders", PickupOrder(Cable))).Json<OrderDto>();
+        var second = (await user.Post("api/Order", PickupOrder(Cable))).Json<OrderDto>();
+        var foreign = (await other.Post("api/Order", PickupOrder(Cable))).Json<OrderDto>();
 
-        var newest = (await user.Get("api/orders?sort=new")).Json<List<OrderSummaryDto>>();
-        var oldest = (await user.Get("api/orders?sort=old")).Json<List<OrderSummaryDto>>();
+        var newest = (await user.Get("api/Order/My?sort=new")).Json<List<OrderSummaryDto>>();
+        var oldest = (await user.Get("api/Order/My?sort=old")).Json<List<OrderSummaryDto>>();
 
         Assert.Equal([second.Id, first.Id], newest.Select(o => o.Id));
         Assert.Equal([first.Id, second.Id], oldest.Select(o => o.Id));
-        Assert.Equal(HttpStatusCode.NotFound, (await user.Get($"api/orders/{foreign.Id}")).Status);
+        Assert.Equal(HttpStatusCode.NotFound, (await user.Get($"api/Order/My/{foreign.Id}")).Status);
     }
 
     [Fact]
@@ -131,14 +131,14 @@ public class OrderTests : ApiTestBase
     {
         var user = await User();
         var admin = await Admin();
-        var order = (await user.Post("api/orders", PickupOrder(Speaker, 3))).Json<OrderDto>();
-        Assert.Equal(5, (await Guest().Get($"api/products/{Speaker}")).Json<ProductDto>().Stock);
+        var order = (await user.Post("api/Order", PickupOrder(Speaker, 3))).Json<OrderDto>();
+        Assert.Equal(5, (await Guest().Get($"api/Product/{Speaker}")).Json<ProductDto>().Stock);
 
-        var cancelled = await admin.Put($"api/admin/orders/{order.Id}/status", new StatusRequest(OrderStatuses.Cancelled));
+        var cancelled = await admin.Put($"api/Order/{order.Id}/Status", new StatusRequest(OrderStatuses.Cancelled));
 
         Assert.Equal(OrderStatuses.Cancelled, cancelled.Json<OrderDto>().Status);
-        Assert.Equal(8, (await Guest().Get($"api/products/{Speaker}")).Json<ProductDto>().Stock);
-        var again = await admin.Put($"api/admin/orders/{order.Id}/status", new StatusRequest(OrderStatuses.Received));
+        Assert.Equal(8, (await Guest().Get($"api/Product/{Speaker}")).Json<ProductDto>().Stock);
+        var again = await admin.Put($"api/Order/{order.Id}/Status", new StatusRequest(OrderStatuses.Received));
         Assert.Equal(HttpStatusCode.BadRequest, again.Status);
     }
 }

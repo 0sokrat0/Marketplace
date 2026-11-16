@@ -33,7 +33,7 @@ public record Result(HttpStatusCode Status, string Body)
 
     public T Json<T>() => JsonSerializer.Deserialize<T>(Body, Options)!;
 
-    public string Error => Json<ErrorResponse>().Error;
+    public string Error => Body;
 }
 
 public class Api(HttpClient http)
@@ -42,14 +42,14 @@ public class Api(HttpClient http)
 
     public async Task<Api> SignInAs(string login, string password)
     {
-        var result = await Post("api/auth/login", new LoginRequest(login, password));
+        var result = await Post("api/Auth/Login", new LoginRequest(login, password));
         http.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", result.Json<AuthResponse>().Token);
         return this;
     }
 
     public async Task<Api> SignUp(string login, string password = "secret1")
     {
-        var result = await Post("api/auth/register", new RegisterRequest(login, password, password));
+        var result = await Post("api/Auth/Register", new RegisterRequest(login, password, password));
         http.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", result.Json<AuthResponse>().Token);
         return this;
     }

@@ -12,7 +12,7 @@ public class CartTests : ApiTestBase
     {
         var user = await User();
 
-        var result = await user.Post("api/cart/items", ToCart(productId));
+        var result = await user.Post("api/Cart/Items", ToCart(productId));
 
         Assert.Equal(HttpStatusCode.BadRequest, result.Status);
     }
@@ -21,9 +21,9 @@ public class CartTests : ApiTestBase
     public async Task Quantity_CannotExceedStock()
     {
         var user = await User();
-        await user.Post("api/cart/items", ToCart(Speaker));
+        await user.Post("api/Cart/Items", ToCart(Speaker));
 
-        var result = await user.Put($"api/cart/items/{Speaker}", new QuantityRequest(9));
+        var result = await user.Put($"api/Cart/Items/{Speaker}", new QuantityRequest(9));
 
         Assert.Equal(HttpStatusCode.BadRequest, result.Status);
         Assert.Contains("осталось 8", result.Error);
@@ -34,10 +34,10 @@ public class CartTests : ApiTestBase
     {
         var user = await User();
 
-        await user.Post("api/cart/items", ToCart(Cable, 2));
-        var afterAdd = (await user.Post("api/cart/items", ToCart(Mug))).Json<CartDto>();
-        var afterChange = (await user.Put($"api/cart/items/{Cable}", new QuantityRequest(3))).Json<CartDto>();
-        var afterRemove = (await user.Delete($"api/cart/items/{Mug}")).Json<CartDto>();
+        await user.Post("api/Cart/Items", ToCart(Cable, 2));
+        var afterAdd = (await user.Post("api/Cart/Items", ToCart(Mug))).Json<CartDto>();
+        var afterChange = (await user.Put($"api/Cart/Items/{Cable}", new QuantityRequest(3))).Json<CartDto>();
+        var afterRemove = (await user.Delete($"api/Cart/Items/{Mug}")).Json<CartDto>();
 
         Assert.Equal(2 * 310m + 350m, afterAdd.Total);
         Assert.Equal(3 * 310m + 350m, afterChange.Total);
@@ -49,10 +49,10 @@ public class CartTests : ApiTestBase
     public async Task Favorites_CanBeMovedToCart()
     {
         var user = await User();
-        await user.Post($"api/favorites/{Mug}");
+        await user.Post($"api/Favorite/{Mug}");
 
-        var cart = (await user.Post($"api/favorites/{Mug}/to-cart")).Json<CartDto>();
-        var favorites = (await user.Get("api/favorites")).Json<List<ProductDto>>();
+        var cart = (await user.Post($"api/Favorite/{Mug}/ToCart")).Json<CartDto>();
+        var favorites = (await user.Get("api/Favorite")).Json<List<ProductDto>>();
 
         Assert.Single(cart.Items);
         Assert.Empty(favorites);
@@ -63,9 +63,9 @@ public class CartTests : ApiTestBase
     {
         var first = await User("first");
         var second = await User("second");
-        await first.Post("api/cart/items", ToCart(Mug));
+        await first.Post("api/Cart/Items", ToCart(Mug));
 
-        var other = (await second.Get("api/cart")).Json<CartDto>();
+        var other = (await second.Get("api/Cart")).Json<CartDto>();
 
         Assert.Empty(other.Items);
     }
