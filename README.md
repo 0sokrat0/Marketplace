@@ -43,6 +43,17 @@ Swagger: `/swagger`.
 | admin | admin123 | Администратор |
 | user | user123 | Пользователь |
 
+## Быстрый запуск через Docker
+
+```bash
+make up      # собрать образ и запустить API на http://localhost:5081
+make logs    # журнал API
+make down    # остановить
+make clean   # остановить и стереть базу
+```
+
+Swagger: `http://localhost:5081/swagger`. База лежит в томе `marketplace-data`. Без Docker: `make run` и `make test`.
+
 ## Запуск клиента
 
 WPF-приложение запускается только на Windows. Сначала запустите API, затем:
