@@ -1,0 +1,11 @@
+services:
+  api:
+    build: .
+    ports:
+      - "5081:8080"
+    volumes:
+      - marketplace-data:/data
+    restart: unless-stopped
+
+volumes:
+  marketplace-data:

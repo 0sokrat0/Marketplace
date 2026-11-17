@@ -1,0 +1,9 @@
+**/bin/
+**/obj/
+**/*.db*
+.git/
+.vs/
+.idea/
+Marketplace.Client/
+Marketplace.Api.Tests/
+docs/
